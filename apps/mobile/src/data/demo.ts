@@ -39,13 +39,6 @@ export const demoDashboard = {
     confirmed: 19,
     pending: 4,
   },
-  nextTraining: {
-    title: 'Tático: saída de bola sob pressão',
-    date: 'Amanhã, 09/10',
-    time: '09:30',
-    location: 'CT · Campo 2',
-    duration: '90 min',
-  },
   alerts: [
     { name: 'Rafael Lima', detail: 'Lesão muscular · retorno previsto 20/10', status: 'injured' as AthleteStatus },
     { name: 'Diego Souza', detail: 'Entorse no tornozelo · avaliação 12/10', status: 'injured' as AthleteStatus },
@@ -118,8 +111,8 @@ export const demoUpcoming = [
     subtitle: 'Jogo · Estadual, rodada 15',
     title: 'EC Exemplo x Sport Clube Paulista',
     stats: [
-      { icon: 'account-check-outline', value: '19' },
-      { icon: 'help-circle-outline', value: '4' },
+      { icon: 'account-check-outline', value: '19', label: 'confirmados' },
+      { icon: 'help-circle-outline', value: '4', label: 'a confirmar' },
     ],
     when: 'Sáb 11/10 · 16:00',
     people: ['LF', 'MR', 'PH'],
@@ -130,8 +123,8 @@ export const demoUpcoming = [
     subtitle: 'Treino tático · CT, Campo 2',
     title: 'Saída de bola sob pressão',
     stats: [
-      { icon: 'account-check-outline', value: '22' },
-      { icon: 'clock-outline', value: '90 min' },
+      { icon: 'account-check-outline', value: '22', label: 'confirmados' },
+      { icon: 'clock-outline', value: '90 min', label: 'de duração' },
     ],
     when: 'Amanhã · 09:30',
     people: ['CM', 'BA', 'DS'],
