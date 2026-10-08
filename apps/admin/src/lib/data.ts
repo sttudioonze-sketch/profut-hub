@@ -5,7 +5,7 @@ import type { Payment, Plan, Subscriber, SubscriptionStatus } from "./types";
 
 // Dicas de FK explícitas: profiles e teams também se ligam via team_members
 const SUBSCRIBER_SELECT =
-  "id, owner_id, plan_id, status, cycle, trial_ends_at, current_period_end, canceled_at, created_at, profiles!subscriptions_owner_id_fkey!inner(full_name, email, phone, teams!teams_owner_id_fkey(count)), plans(name)";
+  "id, owner_id, plan_id, status, cycle, trial_ends_at, current_period_end, canceled_at, created_at, profiles!subscriptions_owner_id_fkey!inner(full_name, email, phone, is_platform_admin, teams!teams_owner_id_fkey(count)), plans(name)";
 
 type SubscriptionRow = {
   id: string;
@@ -55,7 +55,11 @@ export async function listSubscribers(opts: { status?: SubscriptionStatus; q?: s
   }
 
   const supabase = await createClient();
-  let query = supabase.from("subscriptions").select(SUBSCRIBER_SELECT).order("created_at", { ascending: false });
+  let query = supabase
+    .from("subscriptions")
+    .select(SUBSCRIBER_SELECT)
+    .eq("profiles.is_platform_admin", false) // conta de admin não é assinante
+    .order("created_at", { ascending: false });
   if (opts.status) query = query.eq("status", opts.status);
   if (opts.q) {
     const q = opts.q.replace(/[,()%]/g, " ");
@@ -115,7 +119,11 @@ export async function listPlans(): Promise<(Plan & { subscriber_count: number })
   const supabase = await createClient();
   const [{ data: plans, error }, { data: subs, error: subsError }] = await Promise.all([
     supabase.from("plans").select("*").order("sort_order").returns<Plan[]>(),
-    supabase.from("subscriptions").select("plan_id").in("status", ["active", "trialing", "past_due"]),
+    supabase
+      .from("subscriptions")
+      .select("plan_id, profiles!subscriptions_owner_id_fkey!inner(is_platform_admin)")
+      .eq("profiles.is_platform_admin", false)
+      .in("status", ["active", "trialing", "past_due"]),
   ]);
   if (error) throw error;
   if (subsError) throw subsError;

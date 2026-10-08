@@ -31,12 +31,15 @@ Projeto Supabase: `rstaiqfnbxmnnwjqkbua` (São Paulo, sa-east-1) (URL e chave pu
 scripts/test-db.sh   # aplica as migrações num Postgres local e roda o smoke test
 ```
 
-Primeiro admin: crie o usuário em Authentication → Users e rode no SQL Editor:
+Primeiro admin: crie o usuário em Authentication → Users e rode no SQL Editor (contas de admin não aparecem como assinantes):
 
 ```sql
 update profiles set is_platform_admin = true where email = 'seu@email.com';
-delete from subscriptions where owner_id = (select id from profiles where email = 'seu@email.com');
 ```
+
+## Publicar o painel (Vercel)
+
+Importe o repositório na Vercel com **Root Directory** `apps/admin` e as duas variáveis de `apps/admin/.env.example`.
 
 ## Decisões
 
