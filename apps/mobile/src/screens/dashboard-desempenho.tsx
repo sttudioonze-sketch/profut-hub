@@ -195,16 +195,16 @@ function DesempenhoScreen({ glass: isGlass }: { glass: boolean }) {
   );
 }
 
-// Fundo da variante glass: base cinza com manchas de luz (branco, grafite e um toque do vermelho
-// da marca) para o vidro ter o que desfocar.
+// Fundo da variante glass: base cinza com manchas de luz em branco, grafite e prata para o vidro
+// ter o que desfocar. Sem vermelho: a cor da marca fica só nos destaques.
 const blobs = [
   { id: 'b1', color: '#FFFFFF', opacity: 1, x: 0.08, y: 0.04, r: 0.5 },
   { id: 'b2', color: '#1E1E22', opacity: 0.42, x: 0.92, y: 0.12, r: 0.42 },
-  { id: 'b3', color: '#EB0D0D', opacity: 0.34, x: 0.82, y: 0.96, r: 0.46 },
+  { id: 'b3', color: '#2E2E34', opacity: 0.32, x: 0.82, y: 0.96, r: 0.46 },
   { id: 'b4', color: '#7C7C86', opacity: 0.45, x: 0.2, y: 0.78, r: 0.44 },
   { id: 'b5', color: '#FFFFFF', opacity: 0.85, x: 0.5, y: 0.42, r: 0.26 },
-  { id: 'b6', color: '#EB0D0D', opacity: 0.14, x: 0.35, y: 0.3, r: 0.22 },
-];
+  { id: 'b6', color: '#9A9AA4', opacity: 0.3, x: 0.35, y: 0.3, r: 0.22 },
+]
 
 function GlassBackdrop() {
   const { width, height } = useWindowDimensions();
