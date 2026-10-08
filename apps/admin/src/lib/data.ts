@@ -3,8 +3,9 @@ import { isDemo } from "./env";
 import { createClient } from "./supabase/server";
 import type { Payment, Plan, Subscriber, SubscriptionStatus } from "./types";
 
+// Dicas de FK explícitas: profiles e teams também se ligam via team_members
 const SUBSCRIBER_SELECT =
-  "id, owner_id, plan_id, status, cycle, trial_ends_at, current_period_end, canceled_at, created_at, profiles!inner(full_name, email, phone, teams(count)), plans(name)";
+  "id, owner_id, plan_id, status, cycle, trial_ends_at, current_period_end, canceled_at, created_at, profiles!subscriptions_owner_id_fkey!inner(full_name, email, phone, teams!teams_owner_id_fkey(count)), plans(name)";
 
 type SubscriptionRow = {
   id: string;
@@ -91,7 +92,7 @@ export async function listPayments(opts: { subscriptionId?: string; limit?: numb
   const supabase = await createClient();
   let query = supabase
     .from("payments")
-    .select("id, subscription_id, amount_cents, status, method, due_date, paid_at, subscriptions(profiles(full_name, email))")
+    .select("id, subscription_id, amount_cents, status, method, due_date, paid_at, subscriptions(profiles!subscriptions_owner_id_fkey(full_name, email))")
     .order("due_date", { ascending: false })
     .limit(limit);
   if (opts.subscriptionId) query = query.eq("subscription_id", opts.subscriptionId);

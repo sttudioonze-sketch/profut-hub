@@ -213,7 +213,7 @@ create trigger on_team_created
   for each row execute function handle_new_team();
 
 create or replace function touch_updated_at() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   new.updated_at = now();
   return new;

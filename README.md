@@ -25,14 +25,17 @@ Sem as variáveis do Supabase (`apps/admin/.env.example`), o painel roda em **mo
 
 ## Banco
 
+Projeto Supabase: `kysrcorefggglcyvatlb` (URL e chave publicável em `apps/admin/.env.example`). Migrações em `supabase/migrations`, já aplicadas.
+
 ```bash
-scripts/test-db.sh   # aplica a migração num Postgres local e roda o smoke test
+scripts/test-db.sh   # aplica as migrações num Postgres local e roda o smoke test
 ```
 
-No Supabase: rode `supabase/migrations/*_init.sql` e marque o primeiro admin:
+Primeiro admin: crie o usuário em Authentication → Users e rode no SQL Editor:
 
 ```sql
 update profiles set is_platform_admin = true where email = 'seu@email.com';
+delete from subscriptions where owner_id = (select id from profiles where email = 'seu@email.com');
 ```
 
 ## Decisões
