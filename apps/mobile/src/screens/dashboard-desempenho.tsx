@@ -39,21 +39,21 @@ const liquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
 const web = Platform.OS === 'web';
 const blur = (px: number) => (web ? { backdropFilter: `blur(${px}px) saturate(170%)` } : {}) as unknown as ViewStyle;
 // Brilho na borda de cima, como a luz batendo no vidro (só web; no iOS o Liquid Glass já faz isso).
-const rim = (web ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 12px 32px rgba(20,20,24,0.10)' } : {}) as unknown as ViewStyle;
+const rim = (web ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 30px rgba(20,20,24,0.06)' } : {}) as unknown as ViewStyle;
 const glass: Record<'panel' | 'drawer' | 'card' | 'control' | 'tooltip', ViewStyle> = {
-  panel: { backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgba(255,255,255,0.7)', ...blur(30) },
+  panel: { backgroundColor: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.9)', ...blur(30) },
   // Gaveta sobre o conteúdo no celular: quase opaca. Na web o desfoque não alcança o conteúdo
   // atrás dela (cada View do react-native-web isola o empilhamento), então o texto competiria.
   drawer: { backgroundColor: 'rgba(250,250,252,0.94)', borderColor: 'rgba(255,255,255,0.9)', ...blur(36) },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.36)',
-    borderColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    borderColor: 'rgba(255,255,255,0.95)',
     borderRadius: 20,
     // Na web a sombra vem junto com o brilho da borda (rim); no app, sombra nativa
     ...(web ? rim : { shadowColor: '#141418', shadowOpacity: 0.1, shadowRadius: 32, shadowOffset: { width: 0, height: 12 } }),
     ...blur(26),
   },
-  control: { backgroundColor: 'rgba(255,255,255,0.45)', borderColor: 'rgba(255,255,255,0.9)', ...blur(14) },
+  control: { backgroundColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(225,225,230,0.9)', ...blur(14) },
   tooltip: { backgroundColor: 'rgba(255,255,255,0.62)', borderColor: 'rgba(255,255,255,0.95)', ...blur(18) },
 };
 
@@ -107,7 +107,7 @@ function DesempenhoScreen({ glass: isGlass }: { glass: boolean }) {
 
   return (
     <GlassContext.Provider value={isGlass}>
-      <View style={[styles.root, isGlass && { backgroundColor: '#E2E2E6' }]}>
+      <View style={[styles.root, isGlass && { backgroundColor: '#F4F4F6' }]}>
         <StatusBar style="dark" />
         {isGlass && <GlassBackdrop />}
         {wide && <Sidebar />}
@@ -195,16 +195,15 @@ function DesempenhoScreen({ glass: isGlass }: { glass: boolean }) {
   );
 }
 
-// Fundo da variante glass: base cinza com manchas de luz em branco, grafite e prata para o vidro
-// ter o que desfocar. Sem vermelho: a cor da marca fica só nos destaques.
+// Fundo da variante glass: quase branco, com névoa prata bem leve só para o vidro ter o que
+// desfocar. Sem vermelho e sem tons escuros (Luis quer algo clean).
 const blobs = [
-  { id: 'b1', color: '#FFFFFF', opacity: 1, x: 0.08, y: 0.04, r: 0.5 },
-  { id: 'b2', color: '#1E1E22', opacity: 0.42, x: 0.92, y: 0.12, r: 0.42 },
-  { id: 'b3', color: '#2E2E34', opacity: 0.32, x: 0.82, y: 0.96, r: 0.46 },
-  { id: 'b4', color: '#7C7C86', opacity: 0.45, x: 0.2, y: 0.78, r: 0.44 },
-  { id: 'b5', color: '#FFFFFF', opacity: 0.85, x: 0.5, y: 0.42, r: 0.26 },
-  { id: 'b6', color: '#9A9AA4', opacity: 0.3, x: 0.35, y: 0.3, r: 0.22 },
-]
+  { id: 'b1', color: '#FFFFFF', opacity: 1, x: 0.1, y: 0.05, r: 0.55 },
+  { id: 'b2', color: '#C9CAD3', opacity: 0.55, x: 0.92, y: 0.1, r: 0.4 },
+  { id: 'b3', color: '#D3D4DC', opacity: 0.5, x: 0.85, y: 0.95, r: 0.45 },
+  { id: 'b4', color: '#D8D8DE', opacity: 0.55, x: 0.18, y: 0.8, r: 0.42 },
+  { id: 'b5', color: '#FFFFFF', opacity: 0.9, x: 0.55, y: 0.45, r: 0.32 },
+];
 
 function GlassBackdrop() {
   const { width, height } = useWindowDimensions();
@@ -214,8 +213,8 @@ function GlassBackdrop() {
       <Svg width={width} height={height}>
         <Defs>
           <LinearGradient id="bgBase" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#EFEFF2" />
-            <Stop offset="1" stopColor="#C9C9D0" />
+            <Stop offset="0" stopColor="#FAFAFB" />
+            <Stop offset="1" stopColor="#ECECF0" />
           </LinearGradient>
           {blobs.map((b) => (
             <RadialGradient key={b.id} id={b.id} cx="50%" cy="50%" r="50%">
