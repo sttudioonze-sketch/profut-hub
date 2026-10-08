@@ -121,7 +121,7 @@ const glassDark: Record<GlassKind, ViewStyle> = {
 export const glassStyles: Record<ThemeMode, Record<GlassKind, ViewStyle>> = { light: glassLight, dark: glassDark };
 
 // Menu lateral em vidro preto nos dois temas (pedido do Luis, conceito "glass morphism modern"):
-// base quase preta, rótulos cinza, item ativo em pílula quase branca com texto escuro e controles
+// base quase preta, rótulos cinza, item ativo em pílula de vidro escura e brilhante e controles
 // em vidro escuro. O conteúdo e a barra superior seguem o tema do app; só o menu fica preto.
 const menuPalette: Palette = {
   ...dark,
@@ -137,14 +137,14 @@ const menuPalette: Palette = {
   onInk: '#141416',
   track: 'rgba(255,255,255,0.12)',
   soft: 'rgba(255,255,255,0.08)',
-  navActive: '#F5F5F7',
-  navActiveBorder: 'rgba(255,255,255,0.9)',
+  navActive: 'rgba(255,255,255,0.1)',
+  navActiveBorder: 'rgba(255,255,255,0.14)',
 };
 
 // Tons próprios do menu que não existem na paleta das páginas
 export const menuTone = {
-  // Texto e ícone sobre a pílula ativa quase branca
-  activeText: '#141416',
+  // Texto e ícone sobre a pílula ativa de vidro
+  activeText: '#FFFFFF',
   hover: 'rgba(255,255,255,0.06)',
   pressed: 'rgba(255,255,255,0.1)',
   divider: 'rgba(255,255,255,0.07)',

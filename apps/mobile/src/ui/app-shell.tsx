@@ -299,9 +299,8 @@ function NavRow({ item, active, tall, onNavigate }: { item: NavItem; active: boo
         tall && styles.navItemTall,
         !active && hover && { backgroundColor: menuTone.hover },
         !active && press && { backgroundColor: menuTone.pressed },
-        // Ativo: pílula quase branca com texto e ícone escuros
-        active && { backgroundColor: c.navActive, borderColor: c.navActiveBorder },
-        active && styles.navActiveShadow,
+        // Ativo: pílula de vidro escura e brilhante (como o "Assinar o Pro"), texto e ícone brancos
+        active && menuGloss,
       ])}
       onHoverIn={() => setHover(true)}
       onHoverOut={() => setHover(false)}
@@ -405,7 +404,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   navItemTall: { minHeight: 44 },
-  navActiveShadow: { boxShadow: '0 1px 2px rgba(0,0,0,0.45), 0 6px 16px rgba(0,0,0,0.25)' },
   divider: { height: 1, marginHorizontal: 4, marginBottom: 8 },
   plan: { marginTop: 12, borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 },
   planIcon: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
