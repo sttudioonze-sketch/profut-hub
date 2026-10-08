@@ -1,11 +1,13 @@
 // Teste: página Desempenho no layout da referência "Vocalyn" (branco, minimalista, gráfico de
 // área grande e três cards). Menu lateral fixo em telas largas, gaveta no celular.
+// Variante "glass": fundo com manchas de luz e painéis de vidro fosco (Liquid Glass no iOS 26).
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { StatusBar } from 'expo-status-bar';
-import { useState, type ComponentProps, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View, type TextProps } from 'react-native';
+import { createContext, useContext, useState, type ComponentProps, type ReactNode } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View, type StyleProp, type TextProps, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import Svg, { Circle, Defs, Line, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { demoDashboard as d, demoTeam } from '@/data/demo';
 import { fonts } from '@/theme';
@@ -19,7 +21,7 @@ const c = {
   border: '#EBEBEB',
   text: '#141414',
   muted: '#6E6E6E',
-  faint: '#A3A3A3',
+  faint: '#8C8C8C',
   hover: '#F0F0F0',
   ink: '#141414',
   gray1: '#6B6B6B',
@@ -29,8 +31,36 @@ const c = {
   brand: '#EB0D0D',
 };
 
+// Vidro fosco: branco translúcido + desfoque do que está atrás (na web via backdrop-filter;
+// no iPhone com iOS 26 os painéis viram Liquid Glass nativo).
+const GlassContext = createContext(false);
+const useGlass = () => useContext(GlassContext);
+const liquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
+const web = Platform.OS === 'web';
+const blur = (px: number) => (web ? { backdropFilter: `blur(${px}px) saturate(170%)` } : {}) as unknown as ViewStyle;
+// Brilho na borda de cima, como a luz batendo no vidro (só web; no iOS o Liquid Glass já faz isso).
+const rim = (web ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 12px 32px rgba(20,20,24,0.10)' } : {}) as unknown as ViewStyle;
+const glass: Record<'panel' | 'drawer' | 'card' | 'control' | 'tooltip', ViewStyle> = {
+  panel: { backgroundColor: 'rgba(255,255,255,0.34)', borderColor: 'rgba(255,255,255,0.7)', ...blur(30) },
+  // Gaveta sobre o conteúdo no celular: quase opaca. Na web o desfoque não alcança o conteúdo
+  // atrás dela (cada View do react-native-web isola o empilhamento), então o texto competiria.
+  drawer: { backgroundColor: 'rgba(250,250,252,0.94)', borderColor: 'rgba(255,255,255,0.9)', ...blur(36) },
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.36)',
+    borderColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 20,
+    // Na web a sombra vem junto com o brilho da borda (rim); no app, sombra nativa
+    ...(web ? rim : { shadowColor: '#141418', shadowOpacity: 0.1, shadowRadius: 32, shadowOffset: { width: 0, height: 12 } }),
+    ...blur(26),
+  },
+  control: { backgroundColor: 'rgba(255,255,255,0.45)', borderColor: 'rgba(255,255,255,0.9)', ...blur(14) },
+  tooltip: { backgroundColor: 'rgba(255,255,255,0.62)', borderColor: 'rgba(255,255,255,0.95)', ...blur(18) },
+};
+
 // PSE média por dia (escala 0–10) nos últimos 30 dias, de 09/09 a 08/10/2026.
-const pse = [6.0, 6.3, 6.6, 6.2, 5.1, 5.8, 5.0, 5.6, 7.9, 7.5, 5.4, 5.9, 5.2, 4.6, 4.1, 3.6, 5.2, 6.4, 6.9, 7.1, 8.0, 6.2, 4.4, 3.6, 4.9, 6.8, 5.9, 6.6, 7.2, 7.6];
+const pse = [
+  6.0, 6.3, 6.6, 6.2, 5.1, 5.8, 5.0, 5.6, 7.9, 7.5, 5.4, 5.9, 5.2, 4.6, 4.1, 3.6, 5.2, 6.4, 6.9, 7.1, 8.0, 6.2, 4.4, 3.6, 4.9, 6.8, 5.9, 6.6, 7.2, 7.6,
+];
 const firstDay = Date.UTC(2026, 8, 9);
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 function dayLabel(i: number, withWeekday = false) {
@@ -60,6 +90,14 @@ const absences = [
 ];
 
 export default function DashboardDesempenhoScreen() {
+  return <DesempenhoScreen glass={false} />;
+}
+
+export function DashboardDesempenhoGlassScreen() {
+  return <DesempenhoScreen glass />;
+}
+
+function DesempenhoScreen({ glass: isGlass }: { glass: boolean }) {
   const { width } = useWindowDimensions();
   const wide = width >= 1100;
   const medium = width >= 720;
@@ -68,79 +106,154 @@ export default function DashboardDesempenhoScreen() {
   const [view, setView] = useState('Visão geral');
 
   return (
-    <View style={styles.root}>
-      <StatusBar style="dark" />
-      {wide && <Sidebar />}
-      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <TopBar compact={!medium} onMenu={wide ? undefined : () => setDrawer(true)} />
-        <ScrollView contentContainerStyle={[styles.main, !medium && { padding: 16 }]}>
-          <View style={styles.spread}>
-            <Button icon="calendar-blank-outline" label="Últimos 30 dias" chevron />
-            <View style={styles.segmented}>
-              {['Visão geral', 'Tabelas'].map((v) => (
-                <Pressable key={v} onPress={() => setView(v)} style={[styles.segment, v === view && styles.segmentOn]} role="tab" aria-selected={v === view}>
-                  <T size={12} weight={v === view ? 'medium' : 'regular'} color={v === view ? c.text : c.muted}>
-                    {v}
-                  </T>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          <View style={[styles.tabsRow, { borderBottomColor: c.border }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4 }} role="tablist">
-              {['Resumo', 'Tendência semanal', 'Por treino'].map((t) => (
-                <Pressable key={t} onPress={() => setTab(t)} style={[styles.tab, t === tab && styles.tabOn]} role="tab" aria-selected={t === tab}>
-                  <T size={13} weight={t === tab ? 'medium' : 'regular'} color={t === tab ? c.text : c.muted}>
-                    {t}
-                  </T>
-                </Pressable>
-              ))}
-            </ScrollView>
-            {medium && (
-              <View style={[styles.inline, { gap: 8, paddingBottom: 8 }]}>
-                <Button icon="tune-variant" label="Filtrar" />
-                <Button icon="plus" label="Adicionar visão" />
+    <GlassContext.Provider value={isGlass}>
+      <View style={[styles.root, isGlass && { backgroundColor: '#E2E2E6' }]}>
+        <StatusBar style="dark" />
+        {isGlass && <GlassBackdrop />}
+        {wide && <Sidebar />}
+        <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+          <TopBar compact={!medium} onMenu={wide ? undefined : () => setDrawer(true)} />
+          <ScrollView contentContainerStyle={[styles.main, !medium && { padding: 16 }]}>
+            <View style={styles.spread}>
+              <Button icon="calendar-blank-outline" label="Últimos 30 dias" chevron />
+              <View style={[styles.segmented, isGlass && glass.control, isGlass && { borderWidth: 1 }]}>
+                {['Visão geral', 'Tabelas'].map((v) => (
+                  <Pressable key={v} onPress={() => setView(v)} style={[styles.segment, v === view && styles.segmentOn]} role="tab" aria-selected={v === view}>
+                    <T size={12} weight={v === view ? 'medium' : 'regular'} color={v === view ? c.text : c.muted}>
+                      {v}
+                    </T>
+                  </Pressable>
+                ))}
               </View>
-            )}
-          </View>
+            </View>
 
-          <LoadChart compact={!medium} />
+            <View style={[styles.tabsRow, { borderBottomColor: c.border }]}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 4 }} role="tablist">
+                {['Resumo', 'Tendência semanal', 'Por treino'].map((t) => (
+                  <Pressable key={t} onPress={() => setTab(t)} style={[styles.tab, t === tab && styles.tabOn]} role="tab" aria-selected={t === tab}>
+                    <T size={13} weight={t === tab ? 'medium' : 'regular'} color={t === tab ? c.text : c.muted}>
+                      {t}
+                    </T>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              {medium && (
+                <View style={[styles.inline, { gap: 8, paddingBottom: 8 }]}>
+                  <Button icon="tune-variant" label="Filtrar" />
+                  <Button icon="plus" label="Adicionar visão" />
+                </View>
+              )}
+            </View>
 
-          <View style={medium ? styles.cardsRow : { gap: 16 }}>
-            <DonutCard
-              stretch={medium}
-              title="Resultados"
-              subtitle={`${d.season.played} jogos · temporada ${demoTeam.season}`}
-              totalLabel={`${d.season.played} jogos`}
-              items={results}
-              colors={[c.ink, c.gray2, c.gray3]}
-              callout={`${d.season.wins} vitórias`}
+            <LoadChart compact={!medium} />
+
+            <View style={medium ? styles.cardsRow : { gap: 16 }}>
+              <DonutCard
+                stretch={medium}
+                title="Resultados"
+                subtitle={`${d.season.played} jogos · temporada ${demoTeam.season}`}
+                totalLabel={`${d.season.played} jogos`}
+                items={results}
+                colors={[c.ink, c.gray2, c.gray3]}
+                callout={`${d.season.wins} vitórias`}
+              />
+              <BarsCard stretch={medium} />
+              <DonutCard
+                stretch={medium}
+                title="Ausências nos treinos"
+                subtitle="24 faltas · 22 treinos"
+                totalLabel="24 faltas"
+                items={absences}
+                colors={[c.ink, c.gray1, c.gray3]}
+                callout="Lesão · 14"
+              />
+            </View>
+
+            <T size={11} color={c.muted} style={{ textAlign: 'center', marginTop: 4 }}>
+              Dados fictícios de demonstração · Teste referência Vocalyn
+            </T>
+          </ScrollView>
+        </SafeAreaView>
+
+        {!wide && drawer && (
+          <View style={StyleSheet.absoluteFill}>
+            <Pressable
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: isGlass ? 'rgba(20,20,24,0.12)' : 'rgba(0,0,0,0.3)',
+                },
+              ]}
+              onPress={() => setDrawer(false)}
+              accessibilityLabel="Fechar menu"
             />
-            <BarsCard stretch={medium} />
-            <DonutCard
-              stretch={medium}
-              title="Ausências nos treinos"
-              subtitle="24 faltas · 22 treinos"
-              totalLabel="24 faltas"
-              items={absences}
-              colors={[c.ink, c.gray1, c.gray3]}
-              callout="Lesão · 14"
-            />
+            <Sidebar onClose={() => setDrawer(false)} />
           </View>
+        )}
+      </View>
+    </GlassContext.Provider>
+  );
+}
 
-          <T size={11} color={c.faint} style={{ textAlign: 'center', marginTop: 4 }}>
-            Dados fictícios de demonstração · Teste referência Vocalyn
-          </T>
-        </ScrollView>
-      </SafeAreaView>
+// Fundo da variante glass: base cinza com manchas de luz (branco, grafite e um toque do vermelho
+// da marca) para o vidro ter o que desfocar.
+const blobs = [
+  { id: 'b1', color: '#FFFFFF', opacity: 1, x: 0.08, y: 0.04, r: 0.5 },
+  { id: 'b2', color: '#1E1E22', opacity: 0.42, x: 0.92, y: 0.12, r: 0.42 },
+  { id: 'b3', color: '#EB0D0D', opacity: 0.34, x: 0.82, y: 0.96, r: 0.46 },
+  { id: 'b4', color: '#7C7C86', opacity: 0.45, x: 0.2, y: 0.78, r: 0.44 },
+  { id: 'b5', color: '#FFFFFF', opacity: 0.85, x: 0.5, y: 0.42, r: 0.26 },
+  { id: 'b6', color: '#EB0D0D', opacity: 0.14, x: 0.35, y: 0.3, r: 0.22 },
+];
 
-      {!wide && drawer && (
-        <View style={StyleSheet.absoluteFill}>
-          <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.3)' }]} onPress={() => setDrawer(false)} accessibilityLabel="Fechar menu" />
-          <Sidebar onClose={() => setDrawer(false)} />
-        </View>
-      )}
+function GlassBackdrop() {
+  const { width, height } = useWindowDimensions();
+  const size = Math.max(width, height);
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Svg width={width} height={height}>
+        <Defs>
+          <LinearGradient id="bgBase" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor="#EFEFF2" />
+            <Stop offset="1" stopColor="#C9C9D0" />
+          </LinearGradient>
+          {blobs.map((b) => (
+            <RadialGradient key={b.id} id={b.id} cx="50%" cy="50%" r="50%">
+              <Stop offset="0" stopColor={b.color} stopOpacity={b.opacity} />
+              <Stop offset="1" stopColor={b.color} stopOpacity={0} />
+            </RadialGradient>
+          ))}
+        </Defs>
+        <Rect x={0} y={0} width={width} height={height} fill="url(#bgBase)" />
+        {blobs.map((b) => (
+          <Circle key={b.id} cx={b.x * width} cy={b.y * height} r={b.r * size} fill={`url(#${b.id})`} />
+        ))}
+      </Svg>
+    </View>
+  );
+}
+
+// Painel: vidro na variante glass (Liquid Glass nativo no iOS 26), sólido na normal.
+function Pane({
+  kind,
+  style,
+  children,
+  ...props
+}: ComponentProps<typeof View> & {
+  kind: 'panel' | 'drawer' | 'card';
+  style?: StyleProp<ViewStyle>;
+}) {
+  const isGlass = useGlass();
+  if (isGlass && liquidGlass) {
+    return (
+      <GlassView glassEffectStyle="regular" style={[style, { backgroundColor: 'transparent' }]} {...props}>
+        {children}
+      </GlassView>
+    );
+  }
+  return (
+    <View style={[style, isGlass && glass[kind]]} {...props}>
+      {children}
     </View>
   );
 }
@@ -148,7 +261,11 @@ export default function DashboardDesempenhoScreen() {
 /* ---------- Estrutura ---------- */
 
 function Sidebar({ onClose }: { onClose?: () => void }) {
-  const sections: { title?: string; items: { label: string; icon: IconName; active?: boolean }[] }[] = [
+  const isGlass = useGlass();
+  const sections: {
+    title?: string;
+    items: { label: string; icon: IconName; active?: boolean }[];
+  }[] = [
     { items: [{ label: 'Dashboard', icon: 'view-grid-outline' }] },
     {
       title: 'Equipe',
@@ -175,103 +292,127 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
   const usedPct = Math.round((d.squad.total / 40) * 100);
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={styles.sidebar}>
-      <ScrollView contentContainerStyle={{ padding: 16, flexGrow: 1 }}>
-        <View style={[styles.spread, { marginBottom: 20 }]}>
-          <View style={styles.inline}>
-            <View style={styles.logo}>
-              <MaterialCommunityIcons name="soccer" size={16} color="#FFFFFF" />
-            </View>
-            <T weight="bold" size={15}>
-              ProFut HUB
-            </T>
-          </View>
-          <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel={onClose ? 'Fechar menu' : 'Recolher menu'}>
-            <MaterialCommunityIcons name={onClose ? 'close' : 'dock-left'} size={18} color={c.muted} />
-          </Pressable>
-        </View>
-
-        <Pressable style={[styles.teamPicker, { borderColor: c.border }]} accessibilityRole="button" accessibilityLabel={`Equipe ${demoTeam.name}, trocar`}>
-          <View style={styles.teamCrest}>
-            <T weight="bold" size={9} color="#FFFFFF">
-              EC
-            </T>
-          </View>
-          <T weight="medium" size={13} style={{ flex: 1 }}>
-            {demoTeam.name}
-          </T>
-          <MaterialCommunityIcons name="unfold-more-horizontal" size={16} color={c.muted} />
-        </Pressable>
-
-        {sections.map((s, i) => (
-          <View key={i} style={{ marginTop: s.title ? 16 : 0 }}>
-            {s.title && (
-              <T weight="medium" size={10} color={c.muted} style={styles.sectionTitle}>
-                {s.title.toUpperCase()}
+    <Pane kind={onClose ? 'drawer' : 'panel'} style={styles.sidebar}>
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ padding: 16, flexGrow: 1 }}>
+          <View style={[styles.spread, { marginBottom: 20 }]}>
+            <View style={styles.inline}>
+              <View style={styles.logo}>
+                <MaterialCommunityIcons name="soccer" size={16} color="#FFFFFF" />
+              </View>
+              <T weight="bold" size={15}>
+                ProFut HUB
               </T>
-            )}
-            {s.items.map((it) => (
-              <Pressable key={it.label} style={[styles.navItem, it.active && { backgroundColor: c.hover }]} accessibilityRole="button" aria-current={it.active ? 'page' : undefined}>
-                <MaterialCommunityIcons name={it.icon} size={17} color={it.active ? c.text : c.muted} />
-                <T size={13} weight={it.active ? 'medium' : 'regular'} color={it.active ? c.text : '#3A3A3A'}>
+            </View>
+            <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel={onClose ? 'Fechar menu' : 'Recolher menu'}>
+              <MaterialCommunityIcons name={onClose ? 'close' : 'dock-left'} size={18} color={c.muted} />
+            </Pressable>
+          </View>
+
+          <Pressable
+            style={[styles.teamPicker, { borderColor: c.border }, isGlass && glass.control]}
+            accessibilityRole="button"
+            accessibilityLabel={`Equipe ${demoTeam.name}, trocar`}
+          >
+            <View style={styles.teamCrest}>
+              <T weight="bold" size={9} color="#FFFFFF">
+                EC
+              </T>
+            </View>
+            <T weight="medium" size={13} style={{ flex: 1 }}>
+              {demoTeam.name}
+            </T>
+            <MaterialCommunityIcons name="unfold-more-horizontal" size={16} color={c.muted} />
+          </Pressable>
+
+          {sections.map((s, i) => (
+            <View key={i} style={{ marginTop: s.title ? 16 : 0 }}>
+              {s.title && (
+                <T weight="medium" size={10} color={c.muted} style={styles.sectionTitle}>
+                  {s.title.toUpperCase()}
+                </T>
+              )}
+              {s.items.map((it) => (
+                <Pressable
+                  key={it.label}
+                  style={[
+                    styles.navItem,
+                    it.active && {
+                      backgroundColor: isGlass ? 'rgba(255,255,255,0.7)' : c.hover,
+                    },
+                  ]}
+                  accessibilityRole="button"
+                  aria-current={it.active ? 'page' : undefined}
+                >
+                  <MaterialCommunityIcons name={it.icon} size={17} color={it.active ? c.text : c.muted} />
+                  <T size={13} weight={it.active ? 'medium' : 'regular'} color={it.active ? c.text : '#3A3A3A'}>
+                    {it.label}
+                  </T>
+                </Pressable>
+              ))}
+            </View>
+          ))}
+
+          <View style={{ marginTop: 'auto', paddingTop: 24 }}>
+            {[
+              { label: 'Ajustes', icon: 'cog-outline' as IconName },
+              {
+                label: 'Ajuda e suporte',
+                icon: 'help-circle-outline' as IconName,
+              },
+            ].map((it) => (
+              <Pressable key={it.label} style={styles.navItem} accessibilityRole="button">
+                <MaterialCommunityIcons name={it.icon} size={17} color={c.muted} />
+                <T size={13} color="#3A3A3A">
                   {it.label}
                 </T>
               </Pressable>
             ))}
-          </View>
-        ))}
-
-        <View style={{ marginTop: 'auto', paddingTop: 24 }}>
-          {[
-            { label: 'Ajustes', icon: 'cog-outline' as IconName },
-            { label: 'Ajuda e suporte', icon: 'help-circle-outline' as IconName },
-          ].map((it) => (
-            <Pressable key={it.label} style={styles.navItem} accessibilityRole="button">
-              <MaterialCommunityIcons name={it.icon} size={17} color={c.muted} />
-              <T size={13} color="#3A3A3A">
-                {it.label}
-              </T>
-            </Pressable>
-          ))}
-          {/* Uso do plano no lugar dos "Minutes" da referência: limite de 40 atletas do plano Treinador */}
-          <View style={[styles.usage, { borderColor: c.border }]} accessible accessibilityLabel={`${d.squad.total} de 40 atletas do plano usados`}>
-            <View style={styles.spread}>
-              <View style={styles.inline}>
-                <MaterialCommunityIcons name="account-multiple-outline" size={15} color={c.text} />
-                <T size={12} weight="medium">
-                  Atletas no plano
+            {/* Uso do plano no lugar dos "Minutes" da referência: limite de 40 atletas do plano Treinador */}
+            <View
+              style={[styles.usage, { borderColor: c.border }, isGlass && glass.control]}
+              accessible
+              accessibilityLabel={`${d.squad.total} de 40 atletas do plano usados`}
+            >
+              <View style={styles.spread}>
+                <View style={styles.inline}>
+                  <MaterialCommunityIcons name="account-multiple-outline" size={15} color={c.text} />
+                  <T size={12} weight="medium">
+                    Atletas no plano
+                  </T>
+                </View>
+                <T size={12} weight="bold">
+                  {usedPct}%
                 </T>
               </View>
-              <T size={12} weight="bold">
-                {usedPct}%
-              </T>
+              <View style={styles.usageTrack}>
+                <View style={[styles.usageFill, { width: `${usedPct}%` }]} />
+              </View>
+              <View style={styles.spread}>
+                <T size={10} color={c.muted}>
+                  {d.squad.total}
+                </T>
+                <T size={10} color={c.muted}>
+                  40
+                </T>
+              </View>
+              <Pressable style={[styles.upgrade, { borderColor: c.border }, isGlass && glass.control]} accessibilityRole="button">
+                <T size={12} weight="medium">
+                  Fazer upgrade
+                </T>
+              </Pressable>
             </View>
-            <View style={styles.usageTrack}>
-              <View style={[styles.usageFill, { width: `${usedPct}%` }]} />
-            </View>
-            <View style={styles.spread}>
-              <T size={10} color={c.muted}>
-                {d.squad.total}
-              </T>
-              <T size={10} color={c.muted}>
-                40
-              </T>
-            </View>
-            <Pressable style={[styles.upgrade, { borderColor: c.border }]} accessibilityRole="button">
-              <T size={12} weight="medium">
-                Fazer upgrade
-              </T>
-            </Pressable>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </Pane>
   );
 }
 
 function TopBar({ compact, onMenu }: { compact: boolean; onMenu?: () => void }) {
+  const isGlass = useGlass();
   return (
-    <View style={[styles.topBar, { borderBottomColor: c.border }, compact && { paddingHorizontal: 16 }]}>
+    <Pane kind="panel" style={[styles.topBar, { borderBottomColor: c.border }, compact && { paddingHorizontal: 16 }]}>
       {onMenu && (
         <Pressable onPress={onMenu} hitSlop={8} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Abrir menu">
           <MaterialCommunityIcons name="menu" size={22} color={c.text} />
@@ -282,7 +423,11 @@ function TopBar({ compact, onMenu }: { compact: boolean; onMenu?: () => void }) 
       </T>
       {!compact && (
         <View style={styles.searchWrap}>
-          <Pressable style={[styles.search, { borderColor: c.border }]} accessibilityRole="search" accessibilityLabel="Buscar no ProFut">
+          <Pressable
+            style={[styles.search, { borderColor: c.border }, isGlass && glass.control]}
+            accessibilityRole="search"
+            accessibilityLabel="Buscar no ProFut"
+          >
             <MaterialCommunityIcons name="magnify" size={15} color={c.muted} />
             <T size={12} color={c.muted} style={{ flex: 1 }}>
               Buscar no ProFut
@@ -303,13 +448,14 @@ function TopBar({ compact, onMenu }: { compact: boolean; onMenu?: () => void }) 
           {demoTeam.coach[0]}
         </T>
       </View>
-    </View>
+    </Pane>
   );
 }
 
 /* ---------- Cards ---------- */
 
 function LoadChart({ compact }: { compact: boolean }) {
+  const isGlass = useGlass();
   const [w, setW] = useState(0);
   const h = compact ? 180 : 230;
   const padL = 24;
@@ -325,7 +471,7 @@ function LoadChart({ compact }: { compact: boolean }) {
   const tipLeft = Math.min(Math.max(x(peak) + 8, 0), w - 132);
 
   return (
-    <View style={[styles.card, { padding: compact ? 14 : 18 }]}>
+    <Pane kind="card" style={[styles.card, { padding: compact ? 14 : 18 }]}>
       <View style={[styles.spread, { alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }]}>
         <View>
           <T weight="medium" size={15} accessibilityRole="header">
@@ -342,7 +488,12 @@ function LoadChart({ compact }: { compact: boolean }) {
         </View>
       </View>
 
-      <View style={{ height: h, marginTop: 14 }} onLayout={(e) => setW(e.nativeEvent.layout.width)} accessible accessibilityLabel={`PSE média diária dos últimos 30 dias, de ${Math.min(...pse)} a ${Math.max(...pse)}; pico em ${dayLabel(peak, true)}`}>
+      <View
+        style={{ height: h, marginTop: 14 }}
+        onLayout={(e) => setW(e.nativeEvent.layout.width)}
+        accessible
+        accessibilityLabel={`PSE média diária dos últimos 30 dias, de ${Math.min(...pse)} a ${Math.max(...pse)}; pico em ${dayLabel(peak, true)}`}
+      >
         {w > 0 && (
           <>
             <Svg width={w} height={h}>
@@ -369,7 +520,7 @@ function LoadChart({ compact }: { compact: boolean }) {
                 </T>
               ) : null,
             )}
-            <View style={[styles.tooltip, { left: tipLeft, top: y(10) }]}>
+            <View style={[styles.tooltip, { left: tipLeft, top: y(10) }, isGlass && glass.tooltip]}>
               <T size={11} weight="medium">
                 {dayLabel(peak, true)}
               </T>
@@ -385,11 +536,12 @@ function LoadChart({ compact }: { compact: boolean }) {
           </>
         )}
       </View>
-    </View>
+    </Pane>
   );
 }
 
 function CardHeader({ title, subtitle }: { title: string; subtitle: string }) {
+  const isGlass = useGlass();
   return (
     <View style={[styles.spread, { alignItems: 'flex-start' }]}>
       <View>
@@ -400,7 +552,11 @@ function CardHeader({ title, subtitle }: { title: string; subtitle: string }) {
           {subtitle}
         </T>
       </View>
-      <Pressable style={[styles.kebab, { borderColor: c.border }]} accessibilityRole="button" accessibilityLabel={`Mais opções de ${title}`}>
+      <Pressable
+        style={[styles.kebab, { borderColor: c.border }, isGlass && glass.control]}
+        accessibilityRole="button"
+        accessibilityLabel={`Mais opções de ${title}`}
+      >
         <MaterialCommunityIcons name="dots-vertical" size={15} color={c.text} />
       </Pressable>
     </View>
@@ -424,6 +580,7 @@ function DonutCard({
   colors: string[];
   callout: string;
 }) {
+  const isGlass = useGlass();
   const total = items.reduce((s, i) => s + i.value, 0);
   const size = 150;
   const stroke = 18;
@@ -432,15 +589,25 @@ function DonutCard({
   const gap = 14; // espaço entre segmentos já descontando as pontas arredondadas
   let acc = 0;
   const slices = items.map((it, i) => {
-    const s = { ...it, color: colors[i], start: acc / total, frac: it.value / total, pct: Math.round((it.value / total) * 100) };
+    const s = {
+      ...it,
+      color: colors[i],
+      start: acc / total,
+      frac: it.value / total,
+      pct: Math.round((it.value / total) * 100),
+    };
     acc += it.value;
     return s;
   });
 
   return (
-    <View style={[styles.card, stretch && styles.flexCard]}>
+    <Pane kind="card" style={[styles.card, stretch && styles.flexCard]}>
       <CardHeader title={title} subtitle={subtitle} />
-      <View style={{ alignItems: 'center', marginVertical: 18 }} accessible accessibilityLabel={slices.map((s) => `${s.label}: ${s.value}, ${s.pct}%`).join('; ')}>
+      <View
+        style={{ alignItems: 'center', marginVertical: 18 }}
+        accessible
+        accessibilityLabel={slices.map((s) => `${s.label}: ${s.value}, ${s.pct}%`).join('; ')}
+      >
         <View style={{ width: size, height: size }}>
           <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
             {slices.map((s) => (
@@ -466,7 +633,7 @@ function DonutCard({
               {totalLabel}
             </T>
           </View>
-          <View style={styles.callout}>
+          <View style={[styles.callout, isGlass && glass.tooltip]}>
             <T size={9} color={c.muted}>
               {callout}
             </T>
@@ -486,15 +653,16 @@ function DonutCard({
           </View>
         ))}
       </View>
-    </View>
+    </Pane>
   );
 }
 
 function BarsCard({ stretch }: { stretch: boolean }) {
+  const isGlass = useGlass();
   const total = goalOrigins.reduce((s, g) => s + g.value, 0);
   const shades = [c.ink, c.gray1, c.gray1, c.gray2, c.gray2];
   return (
-    <View style={[styles.card, stretch && styles.flexCard]}>
+    <Pane kind="card" style={[styles.card, stretch && styles.flexCard]}>
       <CardHeader title="Origem dos gols" subtitle={`${total} gols · temporada ${demoTeam.season}`} />
       <View style={{ gap: 14, marginTop: 16 }}>
         {goalOrigins.map((g, i) => {
@@ -511,22 +679,34 @@ function BarsCard({ stretch }: { stretch: boolean }) {
               {/* 10 blocos de 5% cada, como na referência */}
               <View style={styles.blocks}>
                 {Array.from({ length: 10 }, (_, k) => (
-                  <View key={k} style={[styles.block, { backgroundColor: k < filled ? shades[i] : c.track }]} />
+                  <View
+                    key={k}
+                    style={[
+                      styles.block,
+                      {
+                        backgroundColor: k < filled ? shades[i] : isGlass ? 'rgba(255,255,255,0.7)' : c.track,
+                      },
+                    ]}
+                  />
                 ))}
               </View>
             </View>
           );
         })}
       </View>
-    </View>
+    </Pane>
   );
 }
 
 /* ---------- Base ---------- */
 
 function Button({ icon, label, chevron, small }: { icon?: IconName; label: string; chevron?: boolean; small?: boolean }) {
+  const isGlass = useGlass();
   return (
-    <Pressable style={[styles.button, { borderColor: c.border }, small && { height: 28, paddingHorizontal: 8 }]} accessibilityRole="button">
+    <Pressable
+      style={[styles.button, { borderColor: c.border }, small && { height: 28, paddingHorizontal: 8 }, isGlass && glass.control]}
+      accessibilityRole="button"
+    >
       {icon && <MaterialCommunityIcons name={icon} size={14} color={c.text} />}
       <T size={small ? 11 : 12}>{label}</T>
       {chevron && <MaterialCommunityIcons name="chevron-down" size={14} color={c.muted} />}
@@ -535,14 +715,30 @@ function Button({ icon, label, chevron, small }: { icon?: IconName; label: strin
 }
 
 function IconBtn({ icon, label }: { icon: IconName; label: string }) {
+  const isGlass = useGlass();
   return (
-    <Pressable style={[styles.iconBtn, styles.iconBtnBorder, { borderColor: c.border }]} accessibilityRole="button" accessibilityLabel={label}>
+    <Pressable
+      style={[styles.iconBtn, styles.iconBtnBorder, { borderColor: c.border }, isGlass && glass.control]}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
       <MaterialCommunityIcons name={icon} size={16} color={c.text} />
     </Pressable>
   );
 }
 
-function T({ weight = 'regular', size = 13, color = c.text, style, ...props }: TextProps & { weight?: 'regular' | 'medium' | 'bold'; size?: number; color?: string; children?: ReactNode }) {
+function T({
+  weight = 'regular',
+  size = 13,
+  color = c.text,
+  style,
+  ...props
+}: TextProps & {
+  weight?: 'regular' | 'medium' | 'bold';
+  size?: number;
+  color?: string;
+  children?: ReactNode;
+}) {
   return <Text style={[{ fontFamily: fonts[weight], fontSize: size, color }, style]} {...props} />;
 }
 
@@ -550,40 +746,178 @@ const styles = StyleSheet.create({
   root: { flex: 1, flexDirection: 'row', backgroundColor: c.page },
   main: { padding: 24, gap: 16 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  spread: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  spread: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   center: { alignItems: 'center', justifyContent: 'center' },
 
-  sidebar: { width: 232, height: '100%', backgroundColor: c.sidebar, borderRightWidth: 1, borderRightColor: c.border },
-  logo: { width: 26, height: 26, borderRadius: 7, backgroundColor: c.ink, alignItems: 'center', justifyContent: 'center' },
-  teamPicker: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, height: 38, backgroundColor: '#FFFFFF', marginBottom: 8 },
-  teamCrest: { width: 20, height: 20, borderRadius: 10, backgroundColor: c.brand, alignItems: 'center', justifyContent: 'center' },
+  sidebar: {
+    width: 232,
+    height: '100%',
+    backgroundColor: c.sidebar,
+    borderRightWidth: 1,
+    borderRightColor: c.border,
+  },
+  logo: {
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    backgroundColor: c.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teamPicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 38,
+    backgroundColor: '#FFFFFF',
+    marginBottom: 8,
+  },
+  teamCrest: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: c.brand,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionTitle: { letterSpacing: 0.6, marginBottom: 4, marginLeft: 8 },
-  navItem: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 36, paddingHorizontal: 8, borderRadius: 8 },
-  usage: { marginTop: 12, borderWidth: 1, borderRadius: 12, padding: 12, gap: 8, backgroundColor: '#FFFFFF' },
+  navItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 36,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  usage: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+    backgroundColor: '#FFFFFF',
+  },
   usageTrack: { height: 4, borderRadius: 2, backgroundColor: c.track },
   usageFill: { height: 4, borderRadius: 2, backgroundColor: c.ink },
-  upgrade: { borderWidth: 1, borderRadius: 8, minHeight: 34, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  upgrade: {
+    borderWidth: 1,
+    borderRadius: 8,
+    minHeight: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
 
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 60, paddingHorizontal: 24, borderBottomWidth: 1 },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 60,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+  },
   searchWrap: { flex: 1, alignItems: 'center' },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 8, width: 260, height: 32, borderRadius: 8, borderWidth: 1, paddingHorizontal: 10 },
-  kbd: { borderWidth: 1, borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
-  iconBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: 260,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+  },
+  kbd: {
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  iconBtn: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   iconBtnBorder: { borderWidth: 1, borderRadius: 8 },
-  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: c.ink, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: c.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
 
-  segmented: { flexDirection: 'row', backgroundColor: c.hover, borderRadius: 8, padding: 3 },
-  segment: { paddingHorizontal: 10, height: 28, justifyContent: 'center', borderRadius: 6 },
-  segmentOn: { backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 3, shadowOffset: { width: 0, height: 1 } },
-  tabsRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', borderBottomWidth: 1 },
-  tab: { paddingHorizontal: 8, paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -1 },
+  segmented: {
+    flexDirection: 'row',
+    backgroundColor: c.hover,
+    borderRadius: 8,
+    padding: 3,
+  },
+  segment: {
+    paddingHorizontal: 10,
+    height: 28,
+    justifyContent: 'center',
+    borderRadius: 6,
+  },
+  segmentOn: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  tabsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+  },
+  tab: {
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    marginBottom: -1,
+  },
   tabOn: { borderBottomColor: c.ink },
-  button: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 32, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, backgroundColor: '#FFFFFF' },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 32,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+  },
 
-  card: { backgroundColor: c.card, borderRadius: 14, borderWidth: 1, borderColor: c.border, padding: 18 },
+  card: {
+    backgroundColor: c.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: c.border,
+    padding: 18,
+  },
   cardsRow: { flexDirection: 'row', gap: 16, alignItems: 'stretch' },
   flexCard: { flex: 1, minWidth: 0 },
-  kebab: { width: 28, height: 28, borderRadius: 8, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  kebab: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   yLabel: { position: 'absolute', left: 0, width: 16, textAlign: 'right' },
   xLabel: { position: 'absolute', width: 40, textAlign: 'center' },
