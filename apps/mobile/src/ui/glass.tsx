@@ -295,20 +295,24 @@ export function Donut({
     // role img: na web o leitor de tela lê o rótulo (com todas as fatias) e ignora os filhos
     <View style={{ width: size, height: size }} accessible role="img" accessibilityLabel={accessibilityLabel}>
       <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
-        {slices.map((s) => (
-          <Circle
-            key={s.label}
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke={s.color}
-            strokeWidth={stroke}
-            strokeLinecap={cap}
-            strokeDasharray={`${Math.max(s.frac * circ - gap, 0.1)} ${circ}`}
-            strokeDashoffset={-(s.start * circ + gap / 2)}
-          />
-        ))}
+        {slices.map((s) => {
+          // Traço centrado na fatia: fatias pequenas demais viram um ponto no meio delas, sem encostar na vizinha
+          const len = Math.max(s.frac * circ - gap, 0.1);
+          return (
+            <Circle
+              key={s.label}
+              cx={size / 2}
+              cy={size / 2}
+              r={r}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={stroke}
+              strokeLinecap={cap}
+              strokeDasharray={`${len} ${circ}`}
+              strokeDashoffset={-(s.start * circ + (s.frac * circ - len) / 2)}
+            />
+          );
+        })}
       </Svg>
       <View style={[StyleSheet.absoluteFill, ui.center]}>{center}</View>
       {callout && (

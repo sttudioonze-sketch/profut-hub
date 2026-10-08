@@ -85,7 +85,7 @@ const glassLight: Record<GlassKind, ViewStyle> = {
   panel: { backgroundColor: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.9)', ...blur(30) },
   // Gaveta sobre o conteúdo no celular: quase opaca. Na web o desfoque não alcança o conteúdo
   // atrás dela (cada View do react-native-web isola o empilhamento), então o texto competiria.
-  drawer: { backgroundColor: 'rgba(250,250,252,0.94)', borderColor: 'rgba(255,255,255,0.9)', ...blur(36) },
+  drawer: { backgroundColor: 'rgba(250,250,252,0.97)', borderColor: 'rgba(255,255,255,0.9)', ...blur(36) },
   card: {
     backgroundColor: 'rgba(255,255,255,0.6)',
     borderColor: 'rgba(255,255,255,0.95)',
@@ -94,7 +94,8 @@ const glassLight: Record<GlassKind, ViewStyle> = {
     ...blur(26),
   },
   control: { backgroundColor: 'rgba(255,255,255,0.7)', borderColor: 'rgba(225,225,230,0.9)', ...blur(14) },
-  tooltip: { backgroundColor: 'rgba(255,255,255,0.62)', borderColor: 'rgba(255,255,255,0.95)', ...blur(18) },
+  // Quase opaca: a linha do gráfico não aparece atrás do texto da dica
+  tooltip: { backgroundColor: 'rgba(255,255,255,0.9)', borderColor: 'rgba(255,255,255,0.95)', ...blur(18) },
   // Card dentro de card (eventos): vidro mais leve, sem sombra grande
   inner: { backgroundColor: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.95)', ...rim('inset 0 1px 0 rgba(255,255,255,0.9)') },
 };

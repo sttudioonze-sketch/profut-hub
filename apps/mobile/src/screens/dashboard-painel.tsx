@@ -163,10 +163,11 @@ function Kpi({ icon, title, value, strong, note }: { icon: IconName; title: stri
 
 function SquadDonut() {
   const { c } = useGlassTheme();
-  // Grafite e cinzas; o vermelho só no arco fino de lesionados (marcador pequeno, como no app antigo).
+  // Rosca só em grafite e cinzas (bolinha da legenda = cor da fatia); o alerta de lesionados fica
+  // num detalhe pequeno: o número em vermelho na legenda.
   const segments = [
     { label: 'Disponíveis', value: d.squad.active, color: c.ink },
-    { label: 'Lesionados', value: d.squad.injured, color: c.brand },
+    { label: 'Lesionados', value: d.squad.injured, color: c.gray1, alert: true },
     { label: 'Suspensos', value: d.squad.suspended, color: c.gray2 },
     { label: 'Emprestado', value: d.squad.loaned, color: c.gray3 },
   ];
@@ -194,7 +195,20 @@ function SquadDonut() {
           }
         />
       </View>
-      <Legend items={segments.map((s) => ({ label: s.label, color: s.color, value: s.value }))} />
+      <Legend
+        items={segments.map((s) => ({
+          label: s.label,
+          color: s.color,
+          value:
+            'alert' in s ? (
+              <T size={11} weight="medium" color={c.negative}>
+                {s.value}
+              </T>
+            ) : (
+              s.value
+            ),
+        }))}
+      />
       <T size={11} color={c.muted} style={{ marginTop: 12 }}>
         Rafael Lima volta em 20/10.
       </T>
@@ -349,7 +363,8 @@ function GoalsTable({ compact }: { compact: boolean }) {
   const { c } = useGlassTheme();
   const g = demoAthleteGoals;
   // Celular: números em largura fixa e o fundamento com o resto (não corta "Finalizações no alvo")
-  const col = (i: number) => (i === 0 ? styles.labelCol : compact ? [styles.numCol, { flex: 0, width: [0, 44, 58, 64][i] }] : styles.numCol);
+  // (sem herdar o flex: 1 do numCol: no react-native-web o flex ignoraria a largura fixa)
+  const col = (i: number) => (i === 0 ? styles.labelCol : compact ? { width: [0, 44, 58, 64][i], flexShrink: 0, textAlign: 'right' as const } : styles.numCol);
   const filters = (
     <>
       <Button small label={g.athlete} chevron accessibilityLabel={`Atleta: ${g.athlete}`} />
@@ -361,7 +376,7 @@ function GoalsTable({ compact }: { compact: boolean }) {
       {/* No celular os filtros descem para baixo do título para não espremê-lo */}
       <CardHeader title="Metas individuais" subtitle="Fundamentos do mês por atleta" action={!compact && filters} />
       {compact && <View style={[ui.inline, { marginTop: 12 }]}>{filters}</View>}
-      <View style={[styles.tableHead, { borderBottomColor: c.border, marginTop: 14 }]}>
+      <View style={[styles.tableHead, { borderBottomColor: c.border, marginTop: 14, columnGap: 10 }]}>
         {['Fundamento', 'Meta', 'Atingido', 'Resultado'].map((h, i) => (
           <T key={h} size={11} color={c.muted} style={col(i)}>
             {h}
@@ -463,7 +478,7 @@ const styles = StyleSheet.create({
   initials: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   tableHead: { flexDirection: 'row', alignItems: 'center', columnGap: 12, paddingBottom: 8, borderBottomWidth: StyleSheet.hairlineWidth, marginTop: 12 },
   tableRow: { flexDirection: 'row', alignItems: 'center', columnGap: 12, paddingVertical: 10 },
-  tableRowSlim: { flexDirection: 'row', alignItems: 'center', columnGap: 8, paddingVertical: 8 },
+  tableRowSlim: { flexDirection: 'row', alignItems: 'center', columnGap: 10, paddingVertical: 8 },
   labelCol: { flex: 1.6, minWidth: 0 },
   numCol: { flex: 1, textAlign: 'right' },
   eventCard: { borderRadius: 14, borderWidth: 1, padding: 14 },

@@ -42,18 +42,19 @@ export function AppShell({ title, active, children }: { title: string; active: N
   useEffect(() => {
     if (!open) return;
     const close = () => setDrawer(false);
-    const back = BackHandler.addEventListener('hardwareBackPress', () => {
-      close();
-      return true;
-    });
-    if (!web) return () => back.remove();
+    if (!web) {
+      const back = BackHandler.addEventListener('hardwareBackPress', () => {
+        close();
+        return true;
+      });
+      return () => back.remove();
+    }
     const main = mainRef.current as unknown as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
     window.addEventListener('keydown', onKey);
     if (main) main.inert = true;
     (closeRef.current as unknown as HTMLElement | null)?.focus();
     return () => {
-      back.remove();
       window.removeEventListener('keydown', onKey);
       if (main) main.inert = false;
       (menuRef.current as unknown as HTMLElement | null)?.focus();
