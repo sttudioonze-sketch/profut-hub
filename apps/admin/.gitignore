@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# app do treinador (gerado pelo export web do apps/mobile)
+/public/app
