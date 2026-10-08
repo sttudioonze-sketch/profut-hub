@@ -15,14 +15,12 @@ export default async function PainelLayout({ children }: LayoutProps<"/">) {
     <div className="flex flex-1 flex-col md:flex-row">
       <Sidebar
         footer={
-          <div className="space-y-3">
-            <div>
-              <p>Atualizado</p>
-              <p className="text-sm font-medium text-white">{formatDate(new Date().toISOString())}</p>
-            </div>
+          <div className="rounded-[14px] border border-white/8 bg-black/50 p-3 shadow-[inset_0_1px_3px_rgba(0,0,0,0.55)]">
+            <p className="text-[11px] text-menu-muted">Atualizado</p>
+            <p className="mt-0.5 text-[13px] font-medium text-[#F5F5F7]">{formatDate(new Date().toISOString())}</p>
             {!isDemo && (
-              <form action={signOut}>
-                <button className="flex items-center gap-2 text-white/70 hover:text-white">
+              <form action={signOut} className="mt-3">
+                <button className="menu-gloss flex h-9 w-full items-center justify-center gap-2 rounded-[10px] text-[13px] font-medium">
                   <LogOut size={14} /> Sair
                 </button>
               </form>
@@ -30,14 +28,8 @@ export default async function PainelLayout({ children }: LayoutProps<"/">) {
           </div>
         }
       />
-      <main className="min-w-0 flex-1 px-4 py-5 md:px-10 md:py-8">
-        {isDemo && (
-          <p className="mb-5 rounded-lg border border-brand/30 bg-brand-soft px-3 py-2 text-xs text-graphite">
-            Modo demonstração: dados fictícios. Configure o Supabase em <code>.env.local</code> para usar dados reais.
-          </p>
-        )}
-        {children}
-      </main>
+      {/* O aviso de modo demonstração fica logo abaixo da barra superior (ver Topbar) */}
+      <main className="min-w-0 flex-1 px-4 pb-8 md:px-8 md:pb-10">{children}</main>
     </div>
   );
 }

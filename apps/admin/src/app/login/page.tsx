@@ -7,9 +7,16 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-1 items-center justify-center p-4">
-      <div className="w-full max-w-sm rounded-xl border border-border bg-surface p-6 shadow-sm">
-        <h1 className="text-lg font-semibold">ProFut HUB</h1>
-        <p className="mb-6 text-sm text-muted">Painel administrativo</p>
+      <div className="glass-card w-full max-w-sm p-7">
+        <div className="mb-7 flex items-center gap-2.5">
+          <div className="flex size-9 items-center justify-center rounded-[10px] bg-ink text-xs font-bold tracking-tight text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_4px_12px_rgba(20,20,24,0.18)]">
+            PF
+          </div>
+          <div className="leading-tight">
+            <h1 className="text-[17px] font-medium tracking-tight">ProFut HUB</h1>
+            <p className="text-xs text-muted">Painel administrativo</p>
+          </div>
+        </div>
         <LoginForm />
       </div>
     </main>

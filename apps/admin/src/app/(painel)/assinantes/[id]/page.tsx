@@ -1,5 +1,3 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/card";
 import { PaymentBadge, SubscriptionBadge } from "@/components/status-badge";
@@ -32,10 +30,7 @@ export default async function AssinantePage({ params }: PageProps<"/assinantes/[
 
   return (
     <>
-      <Link href="/assinantes" className="mb-3 inline-flex items-center gap-1 text-sm text-muted hover:text-foreground">
-        <ArrowLeft size={15} /> Assinantes
-      </Link>
-      <Topbar title={sub.full_name} user={admin.name} />
+      <Topbar title={sub.full_name} user={admin.name} back={{ href: "/assinantes", label: "Assinantes" }} />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="Assinatura" className="lg:col-span-2">
@@ -57,26 +52,26 @@ export default async function AssinantePage({ params }: PageProps<"/assinantes/[
         <Card title="Ações" subtitle={isDemo ? "Desativadas no modo demonstração" : "Registradas no histórico do admin"}>
           <fieldset disabled={isDemo} className="space-y-4 text-sm disabled:opacity-50">
             <form action={extendTrial.bind(null, sub.subscription_id)} className="flex gap-2">
-              <select name="days" defaultValue="7" className="rounded-lg border border-border bg-white px-2 py-2">
+              <select name="days" defaultValue="7" className="glass-control h-10 rounded-xl px-2.5 outline-none focus:border-gray-2">
                 <option value="7">7 dias</option>
                 <option value="14">14 dias</option>
                 <option value="30">30 dias</option>
               </select>
-              <button className="flex-1 rounded-lg bg-graphite px-3 py-2 font-medium text-white">Estender teste</button>
+              <button className="btn-ink h-10 flex-1 rounded-xl px-3 font-medium">Estender teste</button>
             </form>
             <form action={changePlan.bind(null, sub.subscription_id)} className="flex gap-2">
-              <select name="plan_id" defaultValue={sub.plan_id} className="flex-1 rounded-lg border border-border bg-white px-2 py-2">
+              <select name="plan_id" defaultValue={sub.plan_id} className="glass-control h-10 rounded-xl px-2.5 outline-none focus:border-gray-2 min-w-0 flex-1">
                 {plans.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} · {formatBRL(p.price_monthly_cents)}/mês
                   </option>
                 ))}
               </select>
-              <button className="rounded-lg border border-graphite px-3 py-2 font-medium">Trocar plano</button>
+              <button className="glass-control h-10 rounded-xl px-3 font-medium hover:bg-white">Trocar plano</button>
             </form>
             {isLive && (
               <form action={cancelSubscription.bind(null, sub.subscription_id)}>
-                <button className="w-full rounded-lg bg-brand px-3 py-2 font-medium text-white">Cancelar assinatura</button>
+                <button className="glass-control h-10 w-full rounded-xl border-brand/40! px-3 font-medium text-negative hover:bg-white">Cancelar assinatura</button>
               </form>
             )}
           </fieldset>
@@ -90,15 +85,15 @@ export default async function AssinantePage({ params }: PageProps<"/assinantes/[
           <div className="overflow-x-auto">
             <table className="w-full min-w-[520px] text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-xs text-muted">
-                  <th className="pb-2 font-medium">Vencimento</th>
-                  <th className="pb-2 font-medium">Valor</th>
-                  <th className="pb-2 font-medium">Forma</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium">Pago em</th>
+                <tr className="border-b border-hairline text-left text-xs text-muted">
+                  <th className="pb-2.5 font-medium">Vencimento</th>
+                  <th className="pb-2.5 font-medium">Valor</th>
+                  <th className="pb-2.5 font-medium">Forma</th>
+                  <th className="pb-2.5 font-medium">Status</th>
+                  <th className="pb-2.5 font-medium">Pago em</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/70">
+              <tbody className="divide-y divide-hairline">
                 {payments.map((p) => (
                   <tr key={p.id}>
                     <td className="py-2.5">{formatDate(`${p.due_date}T12:00:00-03:00`)}</td>

@@ -81,22 +81,22 @@ export default async function VisaoGeralPage() {
             data={series.map((p) => ({ label: p.label, value: p.mrrCents }))}
             format={(v) => `R$ ${Math.round(v / 100).toLocaleString("pt-BR")}`}
           />
-          <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-border/70 pt-4">
+          <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-hairline pt-4">
             <div>
               <dt className="text-xs text-muted">Receita anual projetada</dt>
-              <dd className="mt-1 text-xl font-bold tracking-tight">{formatBRL(cur.mrrCents * 12)}</dd>
+              <dd className="mt-1 text-xl font-medium tracking-tight">{formatBRL(cur.mrrCents * 12)}</dd>
             </div>
             <div>
               <dt className="text-xs text-muted">Ticket médio</dt>
-              <dd className="mt-1 text-xl font-bold tracking-tight">{formatBRL(cur.paying ? Math.round(cur.mrrCents / cur.paying) : 0)}</dd>
+              <dd className="mt-1 text-xl font-medium tracking-tight">{formatBRL(cur.paying ? Math.round(cur.mrrCents / cur.paying) : 0)}</dd>
             </div>
             <div>
               <dt className="text-xs text-muted">Conversão do teste</dt>
-              <dd className="mt-1 text-xl font-bold tracking-tight">{trialConversion}</dd>
+              <dd className="mt-1 text-xl font-medium tracking-tight">{trialConversion}</dd>
             </div>
             <div>
               <dt className="text-xs text-muted">Inadimplência</dt>
-              <dd className={`mt-1 text-xl font-bold tracking-tight ${count("past_due") ? "text-brand" : ""}`}>
+              <dd className={`mt-1 text-xl font-medium tracking-tight ${count("past_due") ? "text-negative" : ""}`}>
                 {paying.length ? `${((count("past_due") / paying.length) * 100).toFixed(1).replace(".", ",")}%` : "0%"}
               </dd>
             </div>
@@ -104,7 +104,7 @@ export default async function VisaoGeralPage() {
         </Card>
         <Card title="Assinaturas por plano" subtitle="Ativas, em teste e inadimplentes">
           <Donut data={plans.map((p) => ({ label: p.name, value: live.filter((s) => s.plan_id === p.id).length }))} />
-          <div className="mt-5 border-t border-border/70 pt-4">
+          <div className="mt-5 border-t border-hairline pt-4">
             <p className="mb-3 text-xs text-muted">Ciclo de cobrança dos pagantes</p>
             <Donut
               data={[
@@ -118,13 +118,13 @@ export default async function VisaoGeralPage() {
           <HBars
             data={[
               { label: "Ativo", value: count("active") },
-              { label: "Em teste", value: count("trialing"), color: "var(--graphite-2)" },
+              { label: "Em teste", value: count("trialing"), color: "var(--gray-1)" },
               { label: "Inadimplente", value: count("past_due"), color: "var(--brand)" },
-              { label: "Cancelado", value: count("canceled"), color: "#9a9a9a" },
-              { label: "Expirado", value: count("expired"), color: "#b5b5b5" },
+              { label: "Cancelado", value: count("canceled"), color: "var(--gray-2)" },
+              { label: "Expirado", value: count("expired"), color: "var(--gray-3)" },
             ]}
           />
-          <div className="mt-6 border-t border-border/70 pt-4">
+          <div className="mt-6 border-t border-hairline pt-4">
             <p className="mb-3 text-xs text-muted">Novos assinantes por mês</p>
             <BarChart data={series.map((p) => ({ label: p.label, value: p.newCount }))} />
           </div>
@@ -136,15 +136,15 @@ export default async function VisaoGeralPage() {
           <SubscriberTable rows={endingTrials} now={now} />
         </Card>
         <Card title="Inadimplentes" subtitle="Pagamento vencido, conta ainda ativa">
-          <ul className="divide-y divide-border/70">
+          <ul className="divide-y divide-hairline">
             {subs
               .filter((s) => s.status === "past_due")
               .map((s) => (
                 <li key={s.subscription_id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                  <Link href={`/assinantes/${s.subscription_id}`} className="truncate font-medium hover:underline">
+                  <Link href={`/assinantes/${s.subscription_id}`} className="truncate font-medium underline-offset-2 hover:underline">
                     {s.full_name}
                   </Link>
-                  <span className="shrink-0 text-xs text-muted">{s.plan_name}</span>
+                  <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted"><span className="size-1.5 rounded-full bg-brand" />{s.plan_name}</span>
                 </li>
               ))}
           </ul>
@@ -162,19 +162,19 @@ function SubscriberTable({ rows, now }: { rows: Awaited<ReturnType<typeof listSu
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs text-muted">
-            <th className="pb-2 font-medium">Treinador</th>
-            <th className="pb-2 font-medium">Plano</th>
-            <th className="pb-2 font-medium">Fim do teste</th>
-            <th className="pb-2 text-right font-medium">Restam</th>
+            <th className="pb-2.5 font-medium">Treinador</th>
+            <th className="pb-2.5 font-medium">Plano</th>
+            <th className="pb-2.5 font-medium">Fim do teste</th>
+            <th className="pb-2.5 text-right font-medium">Restam</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border/70">
+        <tbody className="divide-y divide-hairline">
           {rows.map((s) => {
             const days = s.trial_ends_at ? Math.ceil((new Date(s.trial_ends_at).getTime() - now.getTime()) / 86_400_000) : null;
             return (
               <tr key={s.subscription_id}>
                 <td className="py-2.5">
-                  <Link href={`/assinantes/${s.subscription_id}`} className="font-medium hover:underline">
+                  <Link href={`/assinantes/${s.subscription_id}`} className="font-medium underline-offset-2 hover:underline">
                     {s.full_name}
                   </Link>
                   <p className="text-xs text-muted">{s.email}</p>
@@ -183,7 +183,7 @@ function SubscriberTable({ rows, now }: { rows: Awaited<ReturnType<typeof listSu
                   <SubscriptionBadge status={s.status} /> <span className="ml-1 text-muted">{s.plan_name}</span>
                 </td>
                 <td className="py-2.5">{formatDate(s.trial_ends_at)}</td>
-                <td className={`py-2.5 text-right font-bold ${days !== null && days <= 3 ? "text-brand" : ""}`}>
+                <td className={`py-2.5 text-right font-medium whitespace-nowrap tabular-nums ${days !== null && days <= 3 ? "text-negative" : ""}`}>
                   {days === null ? "—" : `${days} ${days === 1 ? "dia" : "dias"}`}
                 </td>
               </tr>

@@ -19,9 +19,12 @@ export default async function PagamentosPage() {
           { label: "Pendente", value: sum("pending") },
           { label: "Vencido", value: sum("overdue"), alert: true },
         ].map((k) => (
-          <div key={k.label} className="rounded-2xl border border-border/70 bg-surface p-4">
-            <p className="text-[13px] text-muted">{k.label}</p>
-            <p className={`mt-1 text-[28px] font-bold leading-none tracking-tight ${k.alert && k.value > 0 ? "text-brand" : ""}`}>
+          <div key={k.label} className="glass-card p-4 md:p-5">
+            <p className="flex items-center gap-1.5 text-[13px] font-medium text-muted">
+              {k.alert && k.value > 0 && <span className="size-1.5 rounded-full bg-brand" />}
+              {k.label}
+            </p>
+            <p className="mt-3 text-[28px] leading-none font-medium tracking-tight">
               {formatBRL(k.value)}
             </p>
           </div>
@@ -31,20 +34,20 @@ export default async function PagamentosPage() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-border text-left text-xs text-muted">
-                <th className="pb-2 font-medium">Treinador</th>
-                <th className="pb-2 font-medium">Vencimento</th>
-                <th className="pb-2 font-medium">Valor</th>
-                <th className="pb-2 font-medium">Forma</th>
-                <th className="pb-2 font-medium">Status</th>
-                <th className="pb-2 font-medium">Pago em</th>
+              <tr className="border-b border-hairline text-left text-xs text-muted">
+                <th className="pb-2.5 font-medium">Treinador</th>
+                <th className="pb-2.5 font-medium">Vencimento</th>
+                <th className="pb-2.5 font-medium">Valor</th>
+                <th className="pb-2.5 font-medium">Forma</th>
+                <th className="pb-2.5 font-medium">Status</th>
+                <th className="pb-2.5 font-medium">Pago em</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/70">
+            <tbody className="divide-y divide-hairline">
               {payments.map((p) => (
                 <tr key={p.id}>
                   <td className="py-2.5">
-                    <Link href={`/assinantes/${p.subscription_id}`} className="font-medium hover:underline">
+                    <Link href={`/assinantes/${p.subscription_id}`} className="font-medium underline-offset-2 hover:underline">
                       {p.subscriber_name}
                     </Link>
                   </td>

@@ -35,8 +35,10 @@ export default async function AssinantesPage({ searchParams }: PageProps<"/assin
               <Link
                 key={f ?? "todos"}
                 href={href(f)}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  f === status ? "bg-graphite text-white" : "bg-border/60 text-foreground hover:bg-border"
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  f === status
+                    ? "btn-ink border-ink"
+                    : "glass-control text-foreground hover:bg-white"
                 }`}
               >
                 {f ? subscriptionStatusLabel[f] : "Todos"}
@@ -50,7 +52,7 @@ export default async function AssinantesPage({ searchParams }: PageProps<"/assin
               name="q"
               defaultValue={q}
               placeholder="Buscar por nome ou e-mail"
-              className="w-full rounded-lg border border-border bg-white py-2 pr-3 pl-9 text-sm outline-none focus:border-graphite"
+              className="glass-control h-10 w-full rounded-xl pr-3 pl-9 text-sm outline-none placeholder:text-muted focus:border-gray-2 focus:bg-white"
             />
           </form>
         </div>
@@ -58,21 +60,21 @@ export default async function AssinantesPage({ searchParams }: PageProps<"/assin
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-border text-left text-xs text-muted">
-                <th className="pb-2 font-medium">Treinador</th>
-                <th className="pb-2 font-medium">Status</th>
-                <th className="pb-2 font-medium">Plano</th>
-                <th className="pb-2 font-medium">Ciclo</th>
-                <th className="pb-2 font-medium">Equipes</th>
-                <th className="pb-2 font-medium">Desde</th>
-                <th className="pb-2 font-medium">Próxima cobrança</th>
+              <tr className="border-b border-hairline text-left text-xs text-muted">
+                <th className="pb-2.5 font-medium">Treinador</th>
+                <th className="pb-2.5 font-medium">Status</th>
+                <th className="pb-2.5 font-medium">Plano</th>
+                <th className="pb-2.5 font-medium">Ciclo</th>
+                <th className="pb-2.5 font-medium">Equipes</th>
+                <th className="pb-2.5 font-medium">Desde</th>
+                <th className="pb-2.5 font-medium">Próxima cobrança</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/70">
+            <tbody className="divide-y divide-hairline">
               {rows.map((s) => (
-                <tr key={s.subscription_id} className="hover:bg-white/60">
+                <tr key={s.subscription_id} className="transition-colors hover:bg-white/50">
                   <td className="py-3">
-                    <Link href={`/assinantes/${s.subscription_id}`} className="font-medium hover:underline">
+                    <Link href={`/assinantes/${s.subscription_id}`} className="font-medium underline-offset-2 hover:underline">
                       {s.full_name}
                     </Link>
                     <p className="text-xs text-muted">{s.email}</p>
