@@ -2,13 +2,13 @@
 // no celular) e barra superior fosca com busca, tema, notificações e conta.
 import { Link, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
-import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode, type Ref } from 'react';
+import { BackHandler, Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { demoDashboard as d, demoTeam } from '@/data/demo';
-import { GlassBackdrop, Icon, IconBtn, liquidGlass, Pane, T, ui, type IconName } from '@/ui/glass';
-import { useGlassTheme } from '@/ui/glass-theme';
+import { GlassBackdrop, Icon, IconBtn, Pane, T, ui, type IconName } from '@/ui/glass';
+import { MenuTheme, menuGloss, menuTone, useGlassTheme } from '@/ui/glass-theme';
 
 export type NavKey = 'Dashboard' | 'Elenco' | 'Agenda' | 'Treinos' | 'Táticas' | 'Desempenho' | 'Jogos e súmulas';
 
@@ -127,7 +127,16 @@ const sections: { title?: string; items: NavItem[] }[] = [
   },
 ];
 
-function Sidebar({ active, onClose, closeRef }: { active: NavKey; onClose?: () => void; closeRef?: Ref<View> }) {
+// Menu em vidro preto nos dois temas (o conteúdo e a barra superior seguem o tema do app).
+function Sidebar(props: { active: NavKey; onClose?: () => void; closeRef?: Ref<View> }) {
+  return (
+    <MenuTheme>
+      <SidebarBody {...props} />
+    </MenuTheme>
+  );
+}
+
+function SidebarBody({ active, onClose, closeRef }: { active: NavKey; onClose?: () => void; closeRef?: Ref<View> }) {
   const { c, g } = useGlassTheme();
   const usedPct = Math.round((d.squad.total / PLAN_LIMIT) * 100);
   const drawer = !!onClose;
@@ -135,13 +144,14 @@ function Sidebar({ active, onClose, closeRef }: { active: NavKey; onClose?: () =
   return (
     <Pane
       kind={drawer ? 'drawer' : 'panel'}
-      // Na web vale a borda clara do vidro (como no visual aprovado); a cor cinza só no Liquid Glass
-      style={[styles.sidebar, liquidGlass && { borderRightColor: c.border }]}
+      tint={menuTone.tint}
+      style={[styles.sidebar, { borderRightColor: c.border }, !drawer && web && styles.sidebarOnTop]}
     >
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ padding: 16, flexGrow: 1 }}>
           <View style={[ui.spread, { marginBottom: drawer ? 14 : 20, minHeight: 26 }]}>
-            <View style={ui.inline}>
+            <View style={[ui.inline, { gap: 8 }]}>
+              {/* Marca em branco sobre o preto */}
               <View style={[styles.logo, { backgroundColor: c.ink }]}>
                 <Icon name="soccer" size={16} color={c.onInk} />
               </View>
@@ -152,12 +162,16 @@ function Sidebar({ active, onClose, closeRef }: { active: NavKey; onClose?: () =
             {/* Só na gaveta: no menu fixo não há o que recolher por enquanto */}
             {drawer && (
               <Pressable ref={closeRef} onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel="Fechar menu">
-                <Icon name="close" size={18} color={c.muted} />
+                <Icon name="close" size={18} color={c.navText} />
               </Pressable>
             )}
           </View>
 
-          <Pressable style={[styles.teamPicker, g.control]} accessibilityRole="button" accessibilityLabel={`Equipe ${demoTeam.name}, trocar`}>
+          <Pressable
+            style={[styles.teamPicker, drawer && { height: 44 }, g.control]}
+            accessibilityRole="button"
+            accessibilityLabel={`Equipe ${demoTeam.name}, trocar`}
+          >
             {/* Escudo do time: um dos poucos lugares onde o vermelho da marca aparece */}
             <View style={[styles.teamCrest, { backgroundColor: c.brand }]}>
               <T weight="bold" size={9} color="#FFFFFF">
@@ -171,24 +185,27 @@ function Sidebar({ active, onClose, closeRef }: { active: NavKey; onClose?: () =
           </Pressable>
 
           {sections.map((s, i) => (
-            <View key={i} style={{ marginTop: s.title ? 16 : 0 }}>
+            <View key={i} style={{ marginTop: s.title ? 18 : 6 }}>
               {s.title && (
-                <T weight="medium" size={10} color={c.muted} style={styles.sectionTitle}>
-                  {s.title.toUpperCase()}
+                <T weight="medium" size={12} color={c.muted} style={styles.sectionTitle}>
+                  {s.title}
                 </T>
               )}
-              {s.items.map((it) => (
-                <NavRow key={it.label} item={it} active={it.label === active} tall={drawer} onNavigate={onClose} />
-              ))}
+              <View style={{ gap: 2 }}>
+                {s.items.map((it) => (
+                  <NavRow key={it.label} item={it} active={it.label === active} tall={drawer} onNavigate={onClose} />
+                ))}
+              </View>
             </View>
           ))}
 
           <View style={{ marginTop: 'auto', paddingTop: 24 }}>
+            <View style={[styles.divider, { backgroundColor: menuTone.divider }]} />
             {[
               { label: 'Ajustes', icon: 'cog-outline' as IconName },
               { label: 'Ajuda e suporte', icon: 'help-circle-outline' as IconName },
             ].map((it) => (
-              <Pressable
+              <MenuPressable
                 key={it.label}
                 style={[styles.navItem, drawer && styles.navItemTall]}
                 accessibilityRole="button"
@@ -199,19 +216,20 @@ function Sidebar({ active, onClose, closeRef }: { active: NavKey; onClose?: () =
                 <T size={13} color={c.navText}>
                   {it.label}
                 </T>
-              </Pressable>
+              </MenuPressable>
             ))}
 
-            {/* Teste grátis + uso do plano (limite de atletas do plano Treinador). O botão fica fora
-                do bloco "accessible": no iOS um bloco acessível esconde os botões de dentro. */}
-            <View style={[styles.plan, g.control]}>
+            {/* Teste grátis + uso do plano (limite de atletas do plano Treinador), numa caixa embutida
+                mais escura que o menu. O botão fica fora do bloco "accessible": no iOS um bloco
+                acessível esconde os botões de dentro. */}
+            <View style={[styles.plan, g.inner]}>
               <View
                 style={{ gap: 8 }}
                 accessible
                 accessibilityLabel={`Teste grátis, ${TRIAL_DAYS_LEFT} dias restantes. ${d.squad.total} de ${PLAN_LIMIT} atletas do plano usados`}
               >
                 <View style={[ui.inline, { gap: 10 }]}>
-                  <View style={[styles.planIcon, { backgroundColor: c.soft }]}>
+                  <View style={[styles.planIcon, { backgroundColor: c.soft, borderColor: c.border }]}>
                     <Icon name="crown-outline" size={15} color={c.text} />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -235,11 +253,13 @@ function Sidebar({ active, onClose, closeRef }: { active: NavKey; onClose?: () =
                   <View style={[styles.planFill, { width: `${usedPct}%`, backgroundColor: c.ink }]} />
                 </View>
               </View>
-              <Pressable style={[styles.upgrade, g.control]} accessibilityRole="button">
+              {/* Pílula de vidro brilhante, como o item escolhido na caixa da referência */}
+              <MenuPressable style={[styles.upgrade, drawer && { minHeight: 44 }, menuGloss]} pressedStyle={styles.upgradePressed} accessibilityRole="button">
+                <Icon name="arrow-up-circle-outline" size={15} color={c.text} />
                 <T size={12} weight="medium">
                   Assinar o Pro
                 </T>
-              </Pressable>
+              </MenuPressable>
             </View>
           </View>
         </ScrollView>
@@ -248,17 +268,44 @@ function Sidebar({ active, onClose, closeRef }: { active: NavKey; onClose?: () =
   );
 }
 
+// Pressable do menu com realce leve de passar o mouse/tocar (branco 6% e 10%).
+function MenuPressable({
+  style,
+  pressedStyle,
+  ...props
+}: Omit<ComponentProps<typeof Pressable>, 'style'> & { style?: StyleProp<ViewStyle>; pressedStyle?: StyleProp<ViewStyle> }) {
+  return (
+    <Pressable
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+        style,
+        hovered && !pressedStyle && { backgroundColor: menuTone.hover },
+        pressed && (pressedStyle ?? { backgroundColor: menuTone.pressed }),
+      ]}
+      {...props}
+    />
+  );
+}
+
 function NavRow({ item, active, tall, onNavigate }: { item: NavItem; active: boolean; tall: boolean; onNavigate?: () => void }) {
   const { c } = useGlassTheme();
+  // Realce de mouse/toque por estado: o Link com asChild não aceita style em função
+  const [hover, setHover] = useState(false);
+  const [press, setPress] = useState(false);
   const row = (
     <Pressable
       // Estilo achatado: o Link com asChild mescla o style como objeto e quebraria um array na web
       style={StyleSheet.flatten([
         styles.navItem,
         tall && styles.navItemTall,
-        active && { backgroundColor: c.navActive, borderColor: c.navActiveBorder },
-        active && web && styles.navActiveShadow,
+        !active && hover && { backgroundColor: menuTone.hover },
+        !active && press && { backgroundColor: menuTone.pressed },
+        // Ativo: pílula de vidro escura e brilhante (como o "Assinar o Pro"), texto e ícone brancos
+        active && menuGloss,
       ])}
+      onHoverIn={() => setHover(true)}
+      onHoverOut={() => setHover(false)}
+      onPressIn={() => setPress(true)}
+      onPressOut={() => setPress(false)}
       // Fecha a gaveta (também ao tocar na página atual); o Link compõe este handler com o dele.
       // Passar onPress ao próprio Link substituiria a navegação interna e a web recarregaria.
       onPress={item.href ? onNavigate : undefined}
@@ -268,8 +315,8 @@ function NavRow({ item, active, tall, onNavigate }: { item: NavItem; active: boo
       aria-disabled={item.href ? undefined : true}
       accessibilityHint={item.href ? undefined : 'Em breve'}
     >
-      <Icon name={item.icon} size={17} color={active ? c.text : c.muted} />
-      <T size={13} weight={active ? 'medium' : 'regular'} color={active ? c.text : c.navText}>
+      <Icon name={item.icon} size={17} color={active ? menuTone.activeText : c.muted} />
+      <T size={13} weight={active ? 'medium' : 'regular'} color={active ? menuTone.activeText : c.navText}>
         {item.label}
       </T>
     </Pressable>
@@ -338,29 +385,41 @@ const styles = StyleSheet.create({
   // Largura máxima: em telas muito largas sobra margem dos lados em vez de esticar tabelas
   main: { padding: 24, gap: 16, width: '100%', maxWidth: 1480, alignSelf: 'center' },
 
-  sidebar: { width: 232, height: '100%', borderRightWidth: 1 },
+  sidebar: { width: 240, height: '100%', borderRightWidth: 1 },
+  // Web: o menu fica por cima do conteúdo para a sombra suave cair sobre ele (costura limpa)
+  sidebarOnTop: { zIndex: 1 },
   logo: { width: 26, height: 26, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
   close: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginVertical: -9, marginRight: -12 },
-  teamPicker: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, height: 38, marginBottom: 8 },
+  teamPicker: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, height: 40, marginBottom: 4 },
   teamCrest: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  sectionTitle: { letterSpacing: 0.6, marginBottom: 4, marginLeft: 8 },
+  sectionTitle: { marginBottom: 6, marginLeft: 10 },
   navItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    minHeight: 36,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    minHeight: 38,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   navItemTall: { minHeight: 44 },
-  navActiveShadow: { boxShadow: '0 1px 2px rgba(20,20,24,0.04)' },
-  plan: { marginTop: 12, borderWidth: 1, borderRadius: 12, padding: 12, gap: 8 },
-  planIcon: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  divider: { height: 1, marginHorizontal: 4, marginBottom: 8 },
+  plan: { marginTop: 12, borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 },
+  planIcon: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   planTrack: { height: 4, borderRadius: 2 },
   planFill: { height: 4, borderRadius: 2 },
-  upgrade: { borderWidth: 1, borderRadius: 8, minHeight: 34, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  upgrade: {
+    flexDirection: 'row',
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 10,
+    minHeight: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  upgradePressed: { opacity: 0.85 },
 
   topBar: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 60, paddingHorizontal: 24, borderBottomWidth: 1 },
   searchWrap: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },

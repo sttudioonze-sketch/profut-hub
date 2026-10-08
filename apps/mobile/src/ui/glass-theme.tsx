@@ -35,7 +35,8 @@ const light = {
   avatar: '#ECECEF',
   avatarRing: '#FFFFFF',
   blockEmpty: 'rgba(255,255,255,0.7)',
-  scrim: 'rgba(20,20,24,0.12)',
+  // Escurece o conteúdo atrás da gaveta (agora preta) para ela se destacar
+  scrim: 'rgba(20,20,24,0.22)',
   brand: '#EB0D0D',
   negative: '#C40C0C',
 };
@@ -63,7 +64,7 @@ const dark: Palette = {
   avatar: '#36363C',
   avatarRing: '#2A2A2F',
   blockEmpty: 'rgba(255,255,255,0.07)',
-  scrim: 'rgba(0,0,0,0.35)',
+  scrim: 'rgba(0,0,0,0.45)',
   // Vermelho da marca igual nos dois temas (identidade: escudo, ponto de notificação)
   brand: '#EB0D0D',
   negative: '#FF6B6B',
@@ -78,6 +79,8 @@ const blur = (px: number) => (web ? { backdropFilter: `blur(${px}px) saturate(17
 // Brilho na borda de cima + sombra leve. boxShadow funciona na web e no app (RN 0.86, inclusive
 // Android e sombra interna); no iOS 26 o Liquid Glass substitui tudo isso (ver Pane).
 const rim = (css: string): ViewStyle => ({ boxShadow: css });
+// Degradê CSS por cima da cor de fundo: backgroundImage na web, experimental_backgroundImage no app.
+const paint = (css: string) => (web ? { backgroundImage: css } : { experimental_backgroundImage: css }) as unknown as ViewStyle;
 
 export type GlassKind = 'panel' | 'drawer' | 'card' | 'control' | 'tooltip' | 'inner';
 
@@ -117,6 +120,74 @@ const glassDark: Record<GlassKind, ViewStyle> = {
 
 export const glassStyles: Record<ThemeMode, Record<GlassKind, ViewStyle>> = { light: glassLight, dark: glassDark };
 
+// Menu lateral em vidro preto nos dois temas (pedido do Luis, conceito "glass morphism modern"):
+// base quase preta, rótulos cinza, item ativo em pílula de vidro escura e brilhante e controles
+// em vidro escuro. O conteúdo e a barra superior seguem o tema do app; só o menu fica preto.
+const menuPalette: Palette = {
+  ...dark,
+  page: '#141416',
+  text: '#F5F5F7',
+  // Rótulos de seção e ícones: 5,2:1 sobre a base do menu (AA)
+  muted: '#8E8E93',
+  mutedOnPage: '#8E8E93',
+  faint: '#8E8E93',
+  navText: '#C7C7CC',
+  border: 'rgba(255,255,255,0.08)',
+  ink: '#F5F5F7',
+  onInk: '#141416',
+  track: 'rgba(255,255,255,0.12)',
+  soft: 'rgba(255,255,255,0.08)',
+  navActive: 'rgba(255,255,255,0.1)',
+  navActiveBorder: 'rgba(255,255,255,0.14)',
+};
+
+// Tons próprios do menu que não existem na paleta das páginas
+export const menuTone = {
+  // Texto e ícone sobre a pílula ativa de vidro
+  activeText: '#FFFFFF',
+  hover: 'rgba(255,255,255,0.06)',
+  pressed: 'rgba(255,255,255,0.1)',
+  divider: 'rgba(255,255,255,0.07)',
+  // Tinta do Liquid Glass (iOS 26) para o vidro ficar preto sobre o fundo claro
+  tint: 'rgba(12,12,14,0.82)',
+};
+
+// Brilho diagonal de vidro no canto de cima do menu
+const menuSheen = 'linear-gradient(160deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.02) 28%, rgba(255,255,255,0) 55%)';
+
+// Pílula de vidro brilhante (botão de destaque no menu): degradê branco translúcido, borda clara
+// e brilho interno na borda de cima.
+export const menuGloss: ViewStyle = {
+  backgroundColor: 'rgba(255,255,255,0.04)',
+  borderColor: 'rgba(255,255,255,0.14)',
+  ...paint('linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 100%)'),
+  ...rim('inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.25)'),
+};
+
+const menuGlass: Record<GlassKind, ViewStyle> = {
+  // Web: preto translúcido com desfoque. App: preto sólido (sem desfoque de fundo no RN).
+  panel: {
+    backgroundColor: web ? 'rgba(14,14,16,0.94)' : '#141416',
+    borderColor: 'rgba(255,255,255,0.07)',
+    ...paint(menuSheen),
+    ...rim('1px 0 0 rgba(0,0,0,0.18), 10px 0 30px rgba(10,10,12,0.08)'),
+    ...blur(30),
+  },
+  drawer: {
+    backgroundColor: web ? 'rgba(14,14,16,0.97)' : '#141416',
+    borderColor: 'rgba(255,255,255,0.08)',
+    ...paint(menuSheen),
+    ...rim('16px 0 48px rgba(0,0,0,0.35)'),
+    ...blur(36),
+  },
+  card: glassDark.card,
+  // Seletor de equipe: vidro escuro com brilho fino em cima
+  control: { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.09)', ...rim('inset 0 1px 0 rgba(255,255,255,0.05)') },
+  tooltip: glassDark.tooltip,
+  // Caixa embutida (plano): mais escura que o menu, borda clara sutil, sombra interna
+  inner: { backgroundColor: 'rgba(0,0,0,0.5)', borderColor: 'rgba(255,255,255,0.08)', ...rim('inset 0 1px 3px rgba(0,0,0,0.55)') },
+};
+
 // Fundo: base em degradê + manchas radiais bem leves só para o vidro ter o que desfocar.
 // Claro: quase branco com névoa prata. Escuro: carvão com névoa cinza. Nunca vermelho.
 export const backdrops: Record<ThemeMode, { base: [string, string]; blobs: { color: string; opacity: number; x: number; y: number; r: number }[] }> = {
@@ -152,6 +223,13 @@ export function ThemeModeProvider({ children }: { children: ReactNode }) {
     () => ({ mode, c: palettes[mode], g: glassStyles[mode], setMode, toggle: () => setMode((m) => (m === 'light' ? 'dark' : 'light')) }),
     [mode],
   );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
+
+// Tema do menu lateral: mesmo provedor, paleta e vidro pretos (o modo e a troca seguem os do app).
+export function MenuTheme({ children }: { children: ReactNode }) {
+  const outer = useGlassTheme();
+  const value = useMemo<ThemeValue>(() => ({ ...outer, mode: 'dark', c: menuPalette, g: menuGlass }), [outer]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
