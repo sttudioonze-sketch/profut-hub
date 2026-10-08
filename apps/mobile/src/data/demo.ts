@@ -87,3 +87,54 @@ export const demoByPeriod: Record<Period, { attendancePct: number; attendanceDif
   month: { attendancePct: 87, attendanceDiff: 5, played: 4, wins: 2, draws: 1, losses: 1 },
   season: { attendancePct: 85, attendanceDiff: 2, played: 14, wins: 8, draws: 3, losses: 3 },
 };
+
+// Painel (referência CreatiHR): desempenho, metas individuais e próximos eventos.
+export type Rating = 'great' | 'good' | 'fair' | 'attention';
+
+export const demoPerformance: { name: string; detail: string; position: string; rating: Rating }[] = [
+  { name: 'Lucas Ferreira', detail: 'Camisa 9 · 7 gols', position: 'Atacante', rating: 'great' },
+  { name: 'Matheus Rocha', detail: 'Camisa 10 · 5 gols, 4 assist.', position: 'Meia', rating: 'good' },
+  { name: 'Caio Martins', detail: 'Camisa 4 · pendurado', position: 'Zagueiro', rating: 'fair' },
+  { name: 'Bruno Alves', detail: 'Camisa 6 · suspenso', position: 'Volante', rating: 'attention' },
+];
+
+export const demoAthleteGoals = {
+  athlete: 'Lucas Ferreira',
+  month: 'Out/2026',
+  rows: [
+    { label: 'Passes certos', target: '85%', achieved: '82%', pct: 96 },
+    { label: 'Finalizações no alvo', target: '50%', achieved: '58%', pct: 116 },
+    { label: 'Duelos ganhos', target: '55%', achieved: '49%', pct: 89 },
+    { label: 'Desarmes por jogo', target: '2,0', achieved: '1,4', pct: 70 },
+    { label: 'Gols', target: '8', achieved: '7', pct: 88 },
+    { label: 'Assistências', target: '4', achieved: '3', pct: 75 },
+    { label: 'Minutos jogados', target: '1.260', achieved: '1.134', pct: 90 },
+  ],
+};
+
+export const demoUpcoming = [
+  {
+    kind: 'match' as EventKind,
+    subtitle: 'Jogo · Estadual, rodada 15',
+    title: 'EC Exemplo x Sport Clube Paulista',
+    stats: [
+      { icon: 'account-check-outline', value: '19' },
+      { icon: 'help-circle-outline', value: '4' },
+    ],
+    when: 'Sáb 11/10 · 16:00',
+    people: ['LF', 'MR', 'PH'],
+    more: 16,
+  },
+  {
+    kind: 'training' as EventKind,
+    subtitle: 'Treino tático · CT, Campo 2',
+    title: 'Saída de bola sob pressão',
+    stats: [
+      { icon: 'account-check-outline', value: '22' },
+      { icon: 'clock-outline', value: '90 min' },
+    ],
+    when: 'Amanhã · 09:30',
+    people: ['CM', 'BA', 'DS'],
+    more: 19,
+  },
+];
