@@ -25,7 +25,7 @@ Sem as variáveis do Supabase (`apps/admin/.env.example`), o painel roda em **mo
 
 ## Banco
 
-Projeto Supabase: `kysrcorefggglcyvatlb` (URL e chave publicável em `apps/admin/.env.example`). Migrações em `supabase/migrations`, já aplicadas.
+Projeto Supabase: `rstaiqfnbxmnnwjqkbua` (São Paulo, sa-east-1) (URL e chave publicável em `apps/admin/.env.example`). Migrações em `supabase/migrations`, já aplicadas.
 
 ```bash
 scripts/test-db.sh   # aplica as migrações num Postgres local e roda o smoke test
