@@ -64,19 +64,22 @@ export function GlassBackdrop() {
 
 // Painel de vidro: Liquid Glass nativo no iOS 26 (no esquema de cor do tema do app, não do
 // sistema), View translúcida no resto.
+// `tint` tinge o Liquid Glass (ex.: o menu preto sobre o fundo claro).
 export function Pane({
   kind,
+  tint,
   style,
   children,
   ...props
 }: ComponentProps<typeof View> & {
   kind: 'panel' | 'drawer' | 'card';
+  tint?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   const { mode, g } = useGlassTheme();
   if (liquidGlass) {
     return (
-      <GlassView glassEffectStyle="regular" colorScheme={mode} style={[style, { backgroundColor: 'transparent' }]} {...props}>
+      <GlassView glassEffectStyle="regular" colorScheme={mode} tintColor={tint} style={[style, { backgroundColor: 'transparent' }]} {...props}>
         {children}
       </GlassView>
     );
