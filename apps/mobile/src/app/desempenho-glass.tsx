@@ -2,5 +2,5 @@
 import { Redirect } from 'expo-router';
 
 export default function RedirectRoute() {
-  return <Redirect href="/painel" />;
+  return <Redirect href="/desempenho" />;
 }

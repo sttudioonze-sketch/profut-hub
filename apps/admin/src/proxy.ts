@@ -35,5 +35,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // /app é o app do treinador (público, fora do login do admin).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|app(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
