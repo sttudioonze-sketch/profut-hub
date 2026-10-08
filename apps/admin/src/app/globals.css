@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* Paleta das referências: vermelho #EB0D0D, grafite #343434, cinza #E6E6E6 */
+:root {
+  --background: #e6e6e6;
+  --surface: #f7f7f7;
+  --foreground: #343434;
+  --muted: #747474;
+  --border: #d1d1d1;
+  --brand: #eb0d0d;
+  --brand-soft: #fde4e4;
+  --graphite: #343434;
+  --graphite-2: #484848;
+  --silver: #d1d1d1;
+  --positive: #1f8a4c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-graphite: var(--graphite);
+  --color-graphite-2: var(--graphite-2);
+  --color-silver: var(--silver);
+  --color-positive: var(--positive);
+  --font-sans: var(--font-roboto);
+  --font-mono: var(--font-roboto-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-roboto), system-ui, sans-serif;
+}

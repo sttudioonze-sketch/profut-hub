@@ -1,0 +1,2 @@
+// Sem Supabase configurado, o painel roda com dados de demonstração.
+export const isDemo = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
