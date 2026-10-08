@@ -1,18 +1,36 @@
 @import "tailwindcss";
 
-/* Paleta das referências: vermelho #EB0D0D, grafite #343434, cinza #E6E6E6 */
+/* Visual "glass clean" do app do treinador (apps/mobile/src/ui/glass-theme.tsx):
+   fundo quase branco com névoa prata, cards de vidro branco fosco, gráficos em grafite/cinza
+   e menu lateral em vidro preto. Vermelho da marca só em detalhes, nunca em fundos grandes. */
 :root {
-  --background: #e6e6e6;
-  --surface: #f7f7f7;
-  --foreground: #343434;
-  --muted: #747474;
-  --border: #d1d1d1;
+  --background: #f4f4f6;
+  --surface: rgba(255, 255, 255, 0.6);
+  --foreground: #141414;
+  --muted: #6e6e6e;
+  --muted-on-page: #5e5e5e;
+  --border: #ebebeb;
+  --hairline: rgba(20, 20, 24, 0.07);
   --brand: #eb0d0d;
-  --brand-soft: #fde4e4;
-  --graphite: #343434;
-  --graphite-2: #484848;
-  --silver: #d1d1d1;
-  --positive: #1f8a4c;
+  --brand-soft: rgba(235, 13, 13, 0.08);
+  --negative: #c40c0c;
+  --ink: #141414;
+  --gray-1: #6b6b6b;
+  --gray-2: #a8a8a8;
+  --gray-3: #d4d4d4;
+  --track: #ededed;
+  --soft: rgba(20, 20, 24, 0.05);
+  /* Nomes antigos mantidos para não quebrar nada */
+  --graphite: #141414;
+  --graphite-2: #6b6b6b;
+  --silver: #d4d4d4;
+  --positive: #1f7a46;
+
+  /* Menu preto */
+  --menu-base: rgba(14, 14, 16, 0.94);
+  --menu-text: #c7c7cc;
+  --menu-muted: #8e8e93;
+  --menu-divider: rgba(255, 255, 255, 0.07);
 }
 
 @theme inline {
@@ -20,19 +38,119 @@
   --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --color-muted-on-page: var(--muted-on-page);
   --color-border: var(--border);
+  --color-hairline: var(--hairline);
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
+  --color-negative: var(--negative);
+  --color-ink: var(--ink);
+  --color-gray-1: var(--gray-1);
+  --color-gray-2: var(--gray-2);
+  --color-gray-3: var(--gray-3);
+  --color-track: var(--track);
+  --color-soft: var(--soft);
   --color-graphite: var(--graphite);
   --color-graphite-2: var(--graphite-2);
   --color-silver: var(--silver);
   --color-positive: var(--positive);
+  --color-menu-text: var(--menu-text);
+  --color-menu-muted: var(--menu-muted);
   --font-sans: var(--font-roboto);
   --font-mono: var(--font-roboto-mono);
 }
 
-body {
+html {
   background: var(--background);
+}
+
+/* Fundo: degradê quase branco + manchas radiais prata bem leves (o vidro precisa do que desfocar) */
+body {
   color: var(--foreground);
   font-family: var(--font-roboto), system-ui, sans-serif;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 10% 5%, rgba(255, 255, 255, 1) 0, rgba(255, 255, 255, 0) 55%),
+    radial-gradient(circle at 92% 10%, rgba(201, 202, 211, 0.55) 0, rgba(201, 202, 211, 0) 40%),
+    radial-gradient(circle at 85% 95%, rgba(211, 212, 220, 0.5) 0, rgba(211, 212, 220, 0) 45%),
+    radial-gradient(circle at 18% 80%, rgba(216, 216, 222, 0.55) 0, rgba(216, 216, 222, 0) 42%),
+    radial-gradient(circle at 55% 45%, rgba(255, 255, 255, 0.9) 0, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(135deg, #fafafb 0%, #ececf0 100%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Card de vidro branco fosco (raio 20, borda branca, brilho em cima, sombra leve) */
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 10px 30px rgba(20, 20, 24, 0.06);
+    backdrop-filter: blur(26px) saturate(170%);
+    -webkit-backdrop-filter: blur(26px) saturate(170%);
+  }
+
+  /* Barra superior fosca */
+  .glass-bar {
+    background-color: rgba(255, 255, 255, 0.55);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 1px 0 rgba(20, 20, 24, 0.04);
+    backdrop-filter: blur(30px) saturate(170%);
+    -webkit-backdrop-filter: blur(30px) saturate(170%);
+  }
+
+  /* Controles (busca, selects, filtros, botões secundários) */
+  .glass-control {
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(225, 225, 230, 0.9);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  /* Caixa interna (card dentro de card) */
+  .glass-inner {
+    background-color: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  /* Botão principal grafite com brilho fino */
+  .btn-ink {
+    background-color: var(--ink);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%);
+    color: #fff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 1px 2px rgba(0, 0, 0, 0.18),
+      0 6px 16px rgba(20, 20, 24, 0.14);
+  }
+  .btn-ink:hover {
+    background-color: #2a2a2e;
+  }
+
+  /* Menu lateral: vidro preto com brilho diagonal no canto de cima */
+  .menu-glass {
+    background-color: var(--menu-base);
+    background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.075) 0%, rgba(255, 255, 255, 0.02) 28%, rgba(255, 255, 255, 0) 55%);
+    border-color: var(--menu-divider);
+    box-shadow:
+      1px 0 0 rgba(0, 0, 0, 0.18),
+      10px 0 30px rgba(10, 10, 12, 0.08);
+    backdrop-filter: blur(30px) saturate(170%);
+    -webkit-backdrop-filter: blur(30px) saturate(170%);
+  }
+
+  /* Pílula de vidro escura e brilhante (item ativo e botões do menu) */
+  .menu-gloss {
+    background-color: rgba(255, 255, 255, 0.04);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 1px 2px rgba(0, 0, 0, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.25);
+    color: #fff;
+  }
 }

@@ -1,10 +1,26 @@
-export function Card({ title, subtitle, children, className = "" }: { title?: string; subtitle?: string; children: React.ReactNode; className?: string }) {
+// Card de vidro branco fosco do app (raio 20, borda branca, brilho em cima).
+export function Card({
+  title,
+  subtitle,
+  action,
+  children,
+  className = "",
+}: {
+  title?: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <section className={`rounded-2xl border border-border/70 bg-surface p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ${className}`}>
+    <section className={`glass-card p-5 ${className}`}>
       {title && (
-        <header className="mb-4">
-          <h2 className="text-[15px] font-bold leading-tight">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
+        <header className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-[15px] leading-tight font-medium">{title}</h2>
+            {subtitle && <p className="mt-1 text-xs text-muted">{subtitle}</p>}
+          </div>
+          {action}
         </header>
       )}
       {children}
