@@ -65,13 +65,13 @@ export type EventKind = 'match' | 'training' | 'physical';
 export const demoWeek = {
   today: 'Qua, 8 de outubro',
   days: [
-    { key: 'seg', label: 'S', day: 6, hasEvent: true },
-    { key: 'ter', label: 'T', day: 7, hasEvent: true },
-    { key: 'qua', label: 'Q', day: 8, hasEvent: false, isToday: true },
-    { key: 'qui', label: 'Q', day: 9, hasEvent: true },
-    { key: 'sex', label: 'S', day: 10, hasEvent: true },
-    { key: 'sab', label: 'S', day: 11, hasEvent: true },
-    { key: 'dom', label: 'D', day: 12, hasEvent: false },
+    { key: 'seg', name: 'segunda-feira', label: 'S', day: 6, hasEvent: true },
+    { key: 'ter', name: 'terça-feira', label: 'T', day: 7, hasEvent: true },
+    { key: 'qua', name: 'quarta-feira', label: 'Q', day: 8, hasEvent: false, isToday: true },
+    { key: 'qui', name: 'quinta-feira', label: 'Q', day: 9, hasEvent: true },
+    { key: 'sex', name: 'sexta-feira', label: 'S', day: 10, hasEvent: true },
+    { key: 'sab', name: 'sábado', label: 'S', day: 11, hasEvent: true },
+    { key: 'dom', name: 'domingo', label: 'D', day: 12, hasEvent: false },
   ],
   events: [
     { weekday: 'Qui', day: 9, kind: 'training' as EventKind, title: 'Tático: saída de bola sob pressão', detail: '09:30 · 90 min · CT, Campo 2' },
