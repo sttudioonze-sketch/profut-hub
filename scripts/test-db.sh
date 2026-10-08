@@ -5,9 +5,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 DB=${DB:-profut_test}
 psql -q -c "drop database if exists $DB" -c "create database $DB"
-psql -q -c "drop role if exists authenticated" || true
+psql -q -c "drop role if exists authenticated" -c "drop role if exists anon" || true
 psql -v ON_ERROR_STOP=1 -q -d "$DB" \
   -f supabase/tests/auth-stub.sql \
-  -f supabase/migrations/*_init.sql \
+  $(printf -- "-f %s " supabase/migrations/*.sql) \
   -f supabase/tests/smoke.sql
 echo "OK"
